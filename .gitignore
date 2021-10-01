@@ -1,0 +1,9 @@
+/MIDITouchbar
+/Launchpad_X_for_SONG_MODE
+/Jacques
+/ClyphX
+/SONG_MODE_Launchpad_X
+/open_control/__pycache__
+open_control/SpecialSceneComponent.py
+*.pyc
+open_control/.DS_Store
