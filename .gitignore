@@ -4,6 +4,5 @@
 /ClyphX
 /SONG_MODE_Launchpad_X
 /open_control/__pycache__
-open_control/SpecialSceneComponent.py
 *.pyc
-open_control/.DS_Store
+/open_control/.DS_Store
