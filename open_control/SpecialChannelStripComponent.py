@@ -84,7 +84,8 @@ class ChannelStripComponent(ChannelStripBase):
     def update(self):
         super(ChannelStripComponent, self).update()
         self._on_track_name_changed()
-        self.set_output_level_listener()
+        self._on_arm_changed()
+        # self.set_output_level_listener()
 
     def set_input_level_listener(self):
         try:

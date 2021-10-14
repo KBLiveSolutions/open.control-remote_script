@@ -31,6 +31,7 @@ class SessionComponent(SessionBase):
         self._scene_bank_down_button = None
         self._track_bank_left_button = None
         self._track_bank_right_button = None
+        self._stop_all_clips_button = None
         self._name_controls = None
         self._current_track_color = None
         self._last_selected_parameter = None
@@ -65,6 +66,15 @@ class SessionComponent(SessionBase):
     def set_unfold_track(self, button):
         self._unfold_track_button = button
         self._unfold_track_button_value.subject = button
+
+    def set_stop_all_clips_button(self, button):
+        self._stop_all_clips_button = button
+        self._stop_all_clips_button_value.subject = button
+
+    @subject_slot('value')
+    def _stop_all_clips_button_value(self, value):
+        if value:
+            self.song().stop_all_clips()
 
     def set_scene_bank_up_button(self, button):
         self._scene_bank_up_button = button
@@ -181,13 +191,50 @@ class SessionComponent(SessionBase):
         self._undo_button = button
         self._undo_value.subject = button
 
+    def set_redo(self, button):
+        self._undo_button = button
+        self._redo_value.subject = button
+
     def set_capture(self, button):
         self._capture_button = button
         self._capture_value.subject = button
 
-    def set_reposition_button(self, button):
-        self._reposition_button = button
-        self._reposition_button_value.subject = button
+    def set_jump_to_playing_scene(self, button):
+        self._rjump_to_playing_scene_button = button
+        self._jump_to_playing_scene_value.subject = button
+
+    @subject_slot('value')
+    def _jump_to_playing_scene_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self.set_offsets(self._track_offset, self._last_triggered_scene_index)
+                if Options.session_box_linked_to_selection:
+                    self.song().view.selected_scene = self.song().scenes[self._last_triggered_scene_index]
+
+    def set_insert_scene(self, button):
+        self._insert_scene_button = button
+        self._insert_scene_value.subject = button
+
+    def set_capture_and_insert_scene(self, button):
+        self._capture_and_insert_scene_button = button
+        self._capture_and_insert_scene_value.subject = button
+
+    @subject_slot('value')
+    def _insert_scene_value(self, value):
+        if self.is_enabled():
+            if self.selected_scene in self._song.scenes and Options.session_box_linked_to_selection:
+                self._scene_offset = int(list(self._song.scenes).index(self.selected_scene))
+            if value is not 0:
+                self._scene_offset += 1
+                self.song().create_scene(self._scene_offset)
+                self._reassign_scenes()
+                self._update_position_status_control()
+
+    @subject_slot('value')
+    def _capture_and_insert_scene_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self.song().capture_and_insert_scene()
 
     def _change_offsets(self, track_increment, scene_increment):
         self._update_stop_clips_led(0)
@@ -247,20 +294,17 @@ class SessionComponent(SessionBase):
             if scene_index == scene_count:
                 song.create_scene(scene_count)
         song.tracks[self._track_offset].stop_all_clips(Quantized=False)
-        self._scene_offset = scene_index
-        self._do_show_highlight()
+        if not Options.session_box_linked_to_selection:
+            self._scene_offset = scene_index
+            self._do_show_highlight()
+        else:
+            self.song().view.selected_scene = self._song.scenes[scene_index] 
 
     @subject_slot('value')
     def _find_next_empty_slot_value(self, value):
         if self.is_enabled():
             if value is not 0:
                 self._find_next_empty_slot()
-
-    @subject_slot('value')
-    def _reposition_button_value(self, value):
-        if self.is_enabled():
-            if value is not 0:
-                self.set_offsets(self._track_offset, self._last_triggered_scene_index)
 
     @subject_slot_group('is_triggered')
     def _on_scene_triggered(self, index):
@@ -298,6 +342,12 @@ class SessionComponent(SessionBase):
         if self.is_enabled():
             if value is not 0:
                 self._song.undo()
+
+    @subject_slot('value')
+    def _redo_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self._song.redo()
 
     @subject_slot('value')
     def _capture_value(self, value):
@@ -362,3 +412,4 @@ class SessionComponent(SessionBase):
     def update(self):
         super(SessionComponent, self).update()
         self._update_position_status_control()
+        self.on_selected_scene_changed()

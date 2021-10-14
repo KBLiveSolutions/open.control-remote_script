@@ -19,9 +19,12 @@ class TransportComponent(TransportBase):
         self._restart_button = None   
         self._session_record_button = None
         self._jump_to_start_button = None
+        self._punch_in_button = None
+        self._punch_out_button = None
         self.prev_beat = False
         self._inc_bpm_button = None
         self._dec_bpm_button = None
+        self._back_to_arrangement_button = None
         self._set_or_delete_cue_button = None
         self.prev_cue = None
         self.selected_cue = None
@@ -47,6 +50,33 @@ class TransportComponent(TransportBase):
     def set_restart_button(self, button):
         self._restart_button = button
         self._restart_button_value.subject = button
+
+    def set_punch_in_button(self, button):
+        self._punch_in_button = button
+        self._punch_in_button_value.subject = button
+
+    def set_punch_out_button(self, button):
+        self._punch_out_button = button
+        self._punch_out_button_value.subject = button
+
+    def set_re_enable_automation_button(self, button):
+        self._re_enable_automation_button = button
+        self._re_enable_automation_button_value.subject = button
+
+    @subject_slot('value')
+    def _re_enable_automation_button_value(self, value):
+        if value:
+            self.song().re_enable_automation()
+
+    @subject_slot('value')
+    def _punch_in_button_value(self, value):
+        if value:
+            self.song().punch_in = 1 if self.song().punch_in == 0 else 0
+
+    @subject_slot('value')
+    def _punch_out_button_value(self, value):
+        if value:
+            self.song().punch_out = 1 if self.song().punch_out == 0 else 0
 
     @subject_slot('value')
     def _restart_button_value(self, value):
@@ -163,6 +193,16 @@ class TransportComponent(TransportBase):
         if self._dec_bpm_button != None and value:
             self.song().tempo -= 1
 
+    def set_back_to_arrangement_button(self, button):
+        self._back_to_arrangement_button = button
+        self._back_to_arrangement_button_value.subject = button
+
+    @subject_slot('value')
+    def _back_to_arrangement_button_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self.song().back_to_arranger = 0
+
     def update(self):
         super(TransportComponent, self).update()
         self._on_metronome_changed()
@@ -171,6 +211,9 @@ class TransportComponent(TransportBase):
         self._on_loop_changed()
         self._on_record_changed()
         self._on_session_record_changed()
+        self._on_punch_in_changed()
+        self._on_punch_out_changed()
+        self._on_back_to_arrangement_changed()
 
     def _setup_transport_listeners(self):
         self.song().add_current_song_time_listener(self.on_time_change)
@@ -180,12 +223,30 @@ class TransportComponent(TransportBase):
         self._on_record_changed.subject = self.song()
         self._on_session_record_changed.subject = self.song()
         self._on_cue_points_changed.subject = self.song()
+        self._on_punch_in_changed.subject = self.song()
+        self._on_punch_out_changed.subject = self.song()
+        self._on_re_enable_automation_changed.subject = self.song()
+        self._on_back_to_arrangement_changed.subject = self.song()
+
         # self._on_can_jump_to_next_cue_changed.subject = self.song()
         # self._on_can_jump_to_prev_cue_changed.subject = self.song()
 
+    @subject_slot('back_to_arranger')
+    def _on_back_to_arrangement_changed(self):
+        if self._back_to_arrangement_button is not None:
+            color = 0 if self.song().back_to_arranger == 0 else 2
+            self._back_to_arrangement_button.send_value(color, force=True)
+
+    @subject_slot('re_enable_automation_enabled')
+    def _on_re_enable_automation_changed(self):
+        if self._re_enable_automation_button is not None:
+            color = 0 if self.song().re_enable_automation_enabled == 0 else 3
+            self._re_enable_automation_button.send_value(color, force=True)
+
+
     @subject_slot('cue_points')
     def _on_cue_points_changed(self): 
-        logger.warning("_on_cue_points_changed")
+        self.on_time_change()
 
     @subject_slot('is_playing')
     def _on_start_stop_changed(self):
@@ -204,6 +265,22 @@ class TransportComponent(TransportBase):
             if self.song().session_record:
                 color = 127
             self._session_record_button.send_value(color, channel=14, force=True)
+
+    @subject_slot('punch_in')
+    def _on_punch_in_changed(self):
+        if self.is_enabled() and self._punch_in_button:
+            color = 0
+            if self.song().punch_in:
+                color = 81
+            self._punch_in_button.send_value(color, force=True)
+
+    @subject_slot('punch_out')
+    def _on_punch_out_changed(self):
+        if self.is_enabled() and self._punch_out_button:
+            color = 0
+            if self.song().punch_out:
+                color = 81
+            self._punch_out_button.send_value(color, force=True)
 
     @subject_slot('metronome')
     def _on_metronome_changed(self):
@@ -235,6 +312,10 @@ class TransportComponent(TransportBase):
                 color = 0
             self._record_button.send_value(color, force=True)
 
+    def on_time_change(self):
+        time = self.song().get_current_beats_song_time()
+        quarter = time.sub_division
+        self.compare_cue(int(self.song().current_song_time))
 
     def compare_cue(self, beat):
         for cue_point in reversed(self.song().cue_points):
@@ -267,16 +348,13 @@ class TransportComponent(TransportBase):
     def _on_name_changed(self):
         if self.prev_cue:
             self._send_sysex_for_name(self.prev_cue.name)
+        else:
+            self._send_sysex_for_name("No Marker")
 
     def check_stop(self, name):
         num1 = name.find("(STOP)")
         res = True if num1 > -1 else False
         return (res)
-
-    def on_time_change(self):
-        time = self.song().get_current_beats_song_time()
-        quarter = time.sub_division
-        self.compare_cue(int(self.song().current_song_time))
 
     def _send_sysex_for_name(self, name):
         _len = min(len(name), 32)
