@@ -1,3 +1,4 @@
+import Live
 # from builtins import str
 from _Framework.TransportComponent import TransportComponent as TransportBase
 from _Framework.SubjectSlot import subject_slot
@@ -29,6 +30,7 @@ class TransportComponent(TransportBase):
         self.prev_cue = None
         self.selected_cue = None
         self.groove_amount = None
+        self.temp_midi_rec_q = Live.Song.RecordingQuantization.rec_q_sixtenth
 
         super(TransportComponent, self).__init__(*a, **k)
         self._setup_transport_listeners()
@@ -203,6 +205,18 @@ class TransportComponent(TransportBase):
             if value is not 0:
                 self.song().back_to_arranger = 0
 
+    def set_midi_recording_quantization_button(self, button):
+        self._midi_recording_quantization_button = button
+        self._midi_recording_quantization_button_value.subject = button
+
+    @subject_slot('value')
+    def _midi_recording_quantization_button_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                if self.midi_recording_quantization is not Live.Song.RecordingQuantization.rec_q_no_q:
+                    self.temp_midi_rec_q = self.midi_recording_quantization
+                self.song().midi_recording_quantization = Live.Song.RecordingQuantization.rec_q_no_q if self.song().midi_recording_quantization is not Live.Song.RecordingQuantization.rec_q_no_q else self.temp_midi_rec_q
+                
     def update(self):
         super(TransportComponent, self).update()
         self._on_metronome_changed()
@@ -214,6 +228,7 @@ class TransportComponent(TransportBase):
         self._on_punch_in_changed()
         self._on_punch_out_changed()
         self._on_back_to_arrangement_changed()
+        self._on_midi_recording_quantization_changed()
 
     def _setup_transport_listeners(self):
         self.song().add_current_song_time_listener(self.on_time_change)
@@ -227,9 +242,17 @@ class TransportComponent(TransportBase):
         self._on_punch_out_changed.subject = self.song()
         self._on_re_enable_automation_changed.subject = self.song()
         self._on_back_to_arrangement_changed.subject = self.song()
+        self._on_midi_recording_quantization_changed.subject = self.song()
 
         # self._on_can_jump_to_next_cue_changed.subject = self.song()
         # self._on_can_jump_to_prev_cue_changed.subject = self.song()
+
+    @subject_slot('midi_recording_quantization')
+    def _on_midi_recording_quantization_changed(self):
+        if self._back_to_arrangement_button is not None:
+            self.midi_recording_quantization = self.song().midi_recording_quantization
+            color = 0 if self.midi_recording_quantization == Live.Song.RecordingQuantization.rec_q_no_q else 23
+            self._midi_recording_quantization_button.send_value(color, force=True)
 
     @subject_slot('back_to_arranger')
     def _on_back_to_arrangement_changed(self):
@@ -240,9 +263,8 @@ class TransportComponent(TransportBase):
     @subject_slot('re_enable_automation_enabled')
     def _on_re_enable_automation_changed(self):
         if self._re_enable_automation_button is not None:
-            color = 0 if self.song().re_enable_automation_enabled == 0 else 3
+            color = 0 if self.song().re_enable_automation_enabled == 0 else 15
             self._re_enable_automation_button.send_value(color, force=True)
-
 
     @subject_slot('cue_points')
     def _on_cue_points_changed(self): 
