@@ -251,7 +251,7 @@ class TransportComponent(TransportBase):
     def _on_midi_recording_quantization_changed(self):
         if self._back_to_arrangement_button is not None:
             self.midi_recording_quantization = self.song().midi_recording_quantization
-            color = 0 if self.midi_recording_quantization == Live.Song.RecordingQuantization.rec_q_no_q else 23
+            color = 0 if self.midi_recording_quantization == Live.Song.RecordingQuantization.rec_q_no_q else 126       
             self._midi_recording_quantization_button.send_value(color, force=True)
 
     @subject_slot('back_to_arranger')
