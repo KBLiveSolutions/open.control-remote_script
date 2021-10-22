@@ -8,8 +8,8 @@ import math
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class ChannelStripComponent(ChannelStripBase):
     def __init__(self, *a, **k):

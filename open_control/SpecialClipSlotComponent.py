@@ -6,8 +6,8 @@ from _Framework.Util import in_range, nop
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class ClipSlotComponent(ClipSlotBase):
     def __init__(self, *a, **k):

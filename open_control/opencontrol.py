@@ -37,8 +37,8 @@ NUM_TRACKS = 1
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)  
 
 """ Dictionnaries containing all the actions performed by the buttons/sliders or interpreted by the LEDs.
  It consists of a dictionnary with the name of the action and the associated CC number."""

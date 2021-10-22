@@ -13,8 +13,8 @@ from .SpecialSceneComponent import SceneComponent
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class SessionComponent(SessionBase):
     """ SessionComponent extends the standard to use a custom SceneComponent, use custom

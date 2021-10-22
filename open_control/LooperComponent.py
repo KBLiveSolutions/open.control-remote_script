@@ -12,8 +12,8 @@ state_color = {0: 122, 1: 127, 2: 126, 3: 125}
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class LooperComponent(DeviceBase):
 

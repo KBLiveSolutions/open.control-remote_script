@@ -7,8 +7,8 @@ from . import Options
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class TransportComponent(TransportBase):
     def __init__(self, *a, **k):

@@ -6,8 +6,8 @@ from . import Colors, Options
 import Live
 import logging, traceback
 logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)
+# def print(text):
+#     logger.warning(text)
 
 class DeviceComponent(DeviceComponentBase):
 
