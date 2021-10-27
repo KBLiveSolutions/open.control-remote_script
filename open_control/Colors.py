@@ -24,7 +24,7 @@ class Pulse(Color):
         interface.send_value(self.midi_value, channel=14)
 
 
-class Rgb(object):
+class Rgb:
     BLACK = Color(0)
     DARK_GREY = Color(1)
     GREY = Color(2)

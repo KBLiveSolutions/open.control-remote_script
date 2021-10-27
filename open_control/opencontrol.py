@@ -188,11 +188,10 @@ class opencontrol(ControlSurface):
         self._has_been_identified = False
         self._request_count = 0
         self._last_sent_layout_byte = None
+        self._skin = make_default_skin()
 
         with self.component_guard():
-            self._skin = make_default_skin()
-            with inject(skin=const(self._skin)).everywhere():
-                self._create_buttons()
+            self._create_buttons()
             self._session = SessionComponent( num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
             self._mixer = MixerComponent(num_tracks=NUM_TRACKS)
             self._session.set_mixer(self._mixer)
@@ -243,9 +242,8 @@ class opencontrol(ControlSurface):
         self.solo_buttons = ButtonMatrixElement(rows=[solo_row])
         self.clip_launch_buttons = ButtonMatrixElement(rows=[clip_launch_row])
 
-    @depends(skin=None)
     def make_button(self, identifier, channel, name, msg_type = MIDI_CC_TYPE, skin = None, is_modifier = False):
-        return ButtonElement(True, msg_type, channel, identifier, skin=skin, name=name, resource_type=PrioritizedResource if is_modifier else None)
+        return ButtonElement(True, msg_type, channel, identifier, skin=self._skin, name=name, resource_type=PrioritizedResource if is_modifier else None)
 
     def _create_pages(self):
         self._pages_0_1 = ModesComponent(name='pages_0_1', is_enabled=False)
@@ -356,9 +354,9 @@ class opencontrol(ControlSurface):
         self.set_page_0_2_button(self.buttons["⇆ Page 1/3"])
         self.set_prev_page_button(self.buttons["↩ Prev Page"])
         self.set_next_page_button(self.buttons["↪ Next Page"])
-        self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, self.buttons["⇆ Page Color"])
+        # self.page_color_button = self.make_button(58, MIDI_CHANNEL, msg_type=MIDI_CC_TYPE)
+        self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
         self._pages_0_1.selected_mode = self.pages[0]
-        # self._pages_0_2.selected_page = self.pages[2]
         self._pages_0_2.set_enabled(False)
         self._pages_0_1.set_enabled(True)
 

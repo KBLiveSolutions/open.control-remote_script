@@ -132,31 +132,52 @@ class DeviceComponent(DeviceComponentBase):
     def set_first_device_parameter(self, buttons):
         self.first_device_parameters = buttons
         if buttons:
-            self._on_first_device_parameter_changed.subject = buttons
-    
+            self._on_first_device_parameter_value.subject = buttons
+
+    @subject_slot('value')
+    def _on_first_device_parameter_value(self, *args):
+        self._device = self.song().view.selected_track.devices[0]
+        self.set_parameter_controls(self.first_device_parameters)
+
     def set_selected_device_parameters(self, buttons):
         self.selected_device_parameters = buttons
         if buttons:
-            self._on_selected_device_parameter_changed.subject = buttons
+            self._on_selected_device_parameter_value.subject = buttons
 
     @subject_slot('value')
-    def _on_first_device_parameter_changed(self, *args):
-        banks = parameter_banks(self.selected_track.devices[0]) 
-        parameter = banks[0][args[1]]
-        _min = parameter.min
-        _max = parameter.max
-        parameter.value = self.scale(args[0], _min, _max)
+    def _on_selected_device_parameter_value(self, *args):
+        self._device = self.song().view.selected_track.view.selected_device
+        self.set_parameter_controls(self.selected_device_parameters)
 
-    def scale(self, value, _min, _max):
-        return ((value * (_max - _min)) / 127) + _min
+ 
+    # def set_first_device_parameter(self, buttons):
+    #     self.first_device_parameters = buttons
+    #     if buttons:
+    #         self._on_first_device_parameter_changed.subject = buttons
+    
+    # def set_selected_device_parameters(self, buttons):
+    #     self.selected_device_parameters = buttons
+    #     if buttons:
+    #         self._on_selected_device_parameter_changed.subject = buttons
 
-    @subject_slot('value')
-    def _on_selected_device_parameter_changed(self, *args):
-        banks = parameter_banks(self.selected_track.view.selected_device) 
-        parameter = banks[0][args[1]]
-        _min = parameter.min
-        _max = parameter.max
-        parameter.value = self.scale(args[0], _min, _max)
+    # @subject_slot('value')
+    # def _on_first_device_parameter_changed(self, *args):
+    #     banks = parameter_banks(self.selected_track.devices[0]) 
+    #     parameter = banks[0][args[1]]
+    #     _min = parameter.min
+    #     _max = parameter.max
+    #     parameter.value = self.scale(args[0], _min, _max)
+
+    # def scale(self, value, _min, _max):
+    #     return ((value * (_max - _min)) / 127) + _min
+
+    # @subject_slot('value')
+    # def _on_selected_device_parameter_changed(self, *args):
+    #     banks = parameter_banks(self.selected_track.view.selected_device) 
+    #     parameter = banks[0][args[1]]
+    #     _min = parameter.min
+    #     _max = parameter.max
+    #     parameter.value = self.scale(args[0], _min, _max)
 
     def _scroll_device_view(self, direction):
         self.application().view.show_view(u'Detail')

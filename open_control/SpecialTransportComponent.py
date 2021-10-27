@@ -26,11 +26,13 @@ class TransportComponent(TransportBase):
         self._inc_bpm_button = None
         self._dec_bpm_button = None
         self._back_to_arrangement_button = None
+        self._midi_recording_quantization_button = None
         self._set_or_delete_cue_button = None
         self.prev_cue = None
         self.selected_cue = None
         self.groove_amount = None
         self.temp_midi_rec_q = Live.Song.RecordingQuantization.rec_q_sixtenth
+        self.previous_quarter = 0
 
         super(TransportComponent, self).__init__(*a, **k)
         self._setup_transport_listeners()
@@ -249,7 +251,7 @@ class TransportComponent(TransportBase):
 
     @subject_slot('midi_recording_quantization')
     def _on_midi_recording_quantization_changed(self):
-        if self._back_to_arrangement_button is not None:
+        if self._midi_recording_quantization_button is not None:
             self.midi_recording_quantization = self.song().midi_recording_quantization
             color = 0 if self.midi_recording_quantization == Live.Song.RecordingQuantization.rec_q_no_q else 126       
             self._midi_recording_quantization_button.send_value(color, force=True)
@@ -335,9 +337,15 @@ class TransportComponent(TransportBase):
             self._record_button.send_value(color, force=True)
 
     def on_time_change(self):
-        time = self.song().get_current_beats_song_time()
-        quarter = time.sub_division
-        self.compare_cue(int(self.song().current_song_time))
+        # time = self.song().get_current_beats_song_time()
+        # quarter = time.sub_division
+        if int(self.song().current_song_time) is not self.prev_beat:
+            self.compare_cue(int(self.song().current_song_time))
+            self.prev_beat = int(self.song().current_song_time)
+        # if quarter is not self.previous_quarter and self._start_stop_button:
+        #     message = [240, 122, 29, 1, 19, 21, 38, 44, quarter]
+        #     self._start_stop_button._send_midi(tuple(message))
+        #     self.previous_quarter = quarter
 
     def compare_cue(self, beat):
         for cue_point in reversed(self.song().cue_points):
