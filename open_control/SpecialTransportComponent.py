@@ -41,6 +41,9 @@ class TransportComponent(TransportBase):
 
     def disconnect(self):
         super(TransportComponent, self).disconnect()
+    
+    def _print(self, text):
+        logger.warning(text)
         
     def set_name_controls(self, name):
         self._name_controls = name
@@ -349,14 +352,18 @@ class TransportComponent(TransportBase):
         #     self.previous_quarter = quarter
 
     def compare_cue(self, beat):
-        for cue_point in reversed(self.song().cue_points):
+        highest_cue = 0
+        for cue_point in self.song().cue_points:
             if cue_point.time <= beat:
-                self.selected_cue = cue_point
-                if self.check_stop(self.selected_cue.name):
-                    self.song().stop_playing()
-                    self.selected_cue.jump()
-                break
-        if self.selected_cue and self.prev_cue != self.selected_cue:
+                if cue_point.time > highest_cue:
+                    highest_cue = cue_point.time
+                    self.selected_cue = cue_point
+                # if self.check_stop(self.selected_cue.name):
+                #     self.song().stop_playing()
+                #     self.selected_cue.jump()
+                # break
+        if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
+            self._print(["SEL CUE", self.selected_cue.name])
             self._send_sysex_for_name(self.selected_cue.name)
             if self.prev_cue:
                 self.prev_cue.remove_name_listener(self._on_name_changed)
