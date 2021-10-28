@@ -337,11 +337,12 @@ class TransportComponent(TransportBase):
             self._record_button.send_value(color, force=True)
 
     def on_time_change(self):
+        self.compare_cue(int(self.song().current_song_time))
         # time = self.song().get_current_beats_song_time()
         # quarter = time.sub_division
-        if int(self.song().current_song_time) is not self.prev_beat:
-            self.compare_cue(int(self.song().current_song_time))
-            self.prev_beat = int(self.song().current_song_time)
+        # if int(self.song().current_song_time) is not self.prev_beat:
+        #     self.compare_cue(int(self.song().current_song_time))
+        #     self.prev_beat = int(self.song().current_song_time)
         # if quarter is not self.previous_quarter and self._start_stop_button:
         #     message = [240, 122, 29, 1, 19, 21, 38, 44, quarter]
         #     self._start_stop_button._send_midi(tuple(message))
