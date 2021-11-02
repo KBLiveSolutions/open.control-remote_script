@@ -1,7 +1,7 @@
 
 ![open.control](https://github.com/KBLiveSolutions/open.control/blob/main/assets/images/logo_big.png)
 
-# Remote Script for open·control Remote Script
+# Remote Script for open·control
 
 ### This is the Remote Script that makes opencontrol work with Ableton Live
 
