@@ -1,6 +1,7 @@
 /**
 !/.gitignore
 !/open_control
+!/open_control/LICENSE.txt
 /open_control/__pycache__
 *.pyc
 /open_control/.DS_Store

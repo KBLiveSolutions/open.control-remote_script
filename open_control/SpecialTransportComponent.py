@@ -354,7 +354,7 @@ class TransportComponent(TransportBase):
     def compare_cue(self, beat):
         highest_cue = 0
         for cue_point in self.song().cue_points:
-            if cue_point.time <= beat:
+            if cue_point.time <= beat and not self.check_hide(cue_point.name):
                 if cue_point.time > highest_cue:
                     highest_cue = cue_point.time
                     self.selected_cue = cue_point
@@ -391,6 +391,11 @@ class TransportComponent(TransportBase):
 
     def check_stop(self, name):
         num1 = name.find("(STOP)")
+        res = True if num1 > -1 else False
+        return (res)
+
+    def check_hide(self, name):
+        num1 = name.find("(HIDE)")
         res = True if num1 > -1 else False
         return (res)
 
