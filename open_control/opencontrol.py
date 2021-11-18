@@ -55,8 +55,8 @@ NUM_TRACKS = 1
 
 import logging, traceback
 logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)  
+def print(text):
+    logger.warning(text)  
 
 """ Dictionnaries containing all the actions performed by the buttons/sliders or interpreted by the LEDs.
  It consists of a dictionnary with the name of the action and the associated CC number."""
@@ -66,6 +66,7 @@ button_actions = {
     "--- Global ---": 0,
     "■/▶ Start/Stop": 1,
     "●○ Metronome": 2,
+    "❚▶ Continue Playing": 100,
     "⤶ Undo": 4,
     "⤷ Redo": 40,
     "▢ Capture": 5,
@@ -176,22 +177,36 @@ led_actions = {
     "--- Pages ---": 0,
     "⇆ Page Color": 58,
   }
-slider_actions = {
+slider_actions = {    
     "--- Global ---": 0,
     "Last Selected Parameter": 73,
     "Global Groove Amount": 37,
-    "Arrangement Loop Start": 0,
-    "Arrangement Loop Length": 0,
-    "Scroll Scenes": 0,
+    "Master Volume": 89,
+    "Cue Volume": 90,
+    "BPM +/- 1": 87,
+    "--- Arrangement ---": 0,
+    "Skip Fwd/Bckwd": 83,
+    "Loop Position": 84,
+    "Loop Length": 85,
+    "Jump to Next/Prev Marker": 88,
+    "Horizontal Zoom": 99,
+    "--- Session ---": 0,
+    "Scroll Scenes": 86,
     "--- Selected Track ---": 0,
+    "Volume": 91,
+    "Pan": 96,
     "Send A": 59,
     "Send B": 60,
     "Selected Device Param 1": 61,
     "Selected Device Param 2": 62,
-    "Device 1 Param 1": 63,
-    "Device 1 Param 2": 64,
-    "Looper Device 1 Param 1": 33,
-    "Looper Device 1 Param 2": 34,
+    "Selected Device Param 3": 63,
+    "Selected Device Param 4": 64,
+    "Device 1 Param 1": 92,
+    "Device 1 Param 2": 93,
+    "Device 1 Param 3": 94,
+    "Device 1 Param 4": 95,
+    "--- Custom ---": 0,
+    "Custom MIDI": 122
   }
 display_actions =  {"Scene Name": 80,
                     "Track Name": 81,
@@ -283,13 +298,16 @@ class opencontrol(ControlSurface):
                                                                     redo=self.buttons["⤷ Redo"],
                                                                     current_track_color=self.buttons["✽ Current Track Color"],
                                                                     unfold_track=self.buttons["U Fold/Unfold Track"],
-                                                                    capture=self.buttons["▢ Capture"],
                                                                     stop_all_clips_button=self.buttons["⧈ Stop All Clips"],
                                                                     stop_track_clip_buttons=self.stop_buttons,
                                                                     clip_launch_buttons=self.clip_launch_buttons,
                                                                     last_selected_parameter=self.buttons["Last Selected Parameter"],
                                                                     main_view_toggle=self.buttons["⮂ Arrangement/Session Toggle"],
-                                                                    detail_view_toggle=self.buttons["Clip/Device Toggle"]))
+                                                                    scroll_scenes=self.buttons["Scroll Scenes"],
+                                                                    detail_view_toggle=self.buttons["Clip/Device Toggle"],
+                                                                    # master_volume=self.buttons["Master Volume"],
+                                                                    # cue_volume=self.buttons["Cue Volume"]
+                                                                    ))
 
 
 
@@ -298,29 +316,39 @@ class opencontrol(ControlSurface):
         """Transport Actions"""
         self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["■/▶ Start/Stop"],
                                                                     loop_button=self.buttons["⥁ Arrangement Loop"],
+                                                                    capture=self.buttons["▢ Capture"],
+                                                                    continue_playing=self.buttons["❚▶ Continue Playing"],
+                                                                    loop_position=self.buttons["Loop Position"],
+                                                                    loop_length=self.buttons["Loop Length"],
                                                                     name_controls=self.buttons["Left Marker Name"],
                                                                     jump_to_start=self.buttons["↞ Jump to 1.1.1"],
                                                                     restart_button=self.buttons["⇉ Restart From Last Position"],
                                                                     set_or_delete_cue_button=self.buttons["⤓ Add/Delete Marker"],
                                                                     inc_bpm_button=self.buttons["⊕ BPM +1"],
                                                                     dec_bpm_button=self.buttons["⊖ BPM -1"],
+                                                                    inc_dec_bpm_button=self.buttons["BPM +/- 1"],
                                                                     punch_in_button=self.buttons["Punch In"],
                                                                     punch_out_button=self.buttons["Punch Out"],
+                                                                    h_zoom=self.buttons["Horizontal Zoom"],
                                                                     back_to_arrangement_button=self.buttons["⇶ Back To Arrangement"],
                                                                     midi_recording_quantization_button=self.buttons["ℚ MIDI Recording Quantization"],
                                                                     re_enable_automation_button=self.buttons["Re-enable Automation"],
                                                                     prev_cue_button=self.buttons["⇤ Go to Prev Marker"],
                                                                     next_cue_button=self.buttons["⇥ Go to Next Marker"],
+                                                                    prev_next_cue_button=self.buttons["Jump to Next/Prev Marker"],
                                                                     marker_loop_button=self.buttons["⥀ Loop to Next Marker"],
                                                                     metronome=self.buttons["●○ Metronome"],
                                                                     record_button=self.buttons["● Arrangement Rec"],
                                                                     session_record_button=self.buttons["○ Session Rec"],
+                                                                    skip=self.buttons["Skip Fwd/Bckwd"],
                                                                     groove_amount=self.buttons["Global Groove Amount"]
                                                                     ))
         """Mixer Actions"""
         self._mixer_mode = AddLayerMode(self._mixer, Layer(mute_buttons=self.mute_buttons,
                                                             arm_buttons=self.arm_buttons,
-                                                            solo_buttons=self.solo_buttons
+                                                            solo_buttons=self.solo_buttons,
+                                                            prehear_volume_control=self.buttons["Cue Volume"],
+                                                            master_volume=self.buttons["Master Volume"]
                                                             ))
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
@@ -332,8 +360,8 @@ class opencontrol(ControlSurface):
                                                                     store_variation_button=self.buttons["◦ Store Variation"],
                                                                     recall_variation_button=self.buttons["↩︎ Recall Last Used"],
                                                                     randomize_macros_button=self.buttons["⌁ Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Selected Device Param 1"], self.buttons["Selected Device Param 2"]]]),
-                                                                    first_device_parameter=ButtonMatrixElement(rows=[[self.buttons["Device 1 Param 1"], self.buttons["Device 1 Param 2"]]]), priority=1))
+                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Selected Device Param 1"], self.buttons["Selected Device Param 2"], self.buttons["Selected Device Param 3"], self.buttons["Selected Device Param 4"]]]),
+                                                                    first_device_parameter=ButtonMatrixElement(rows=[[self.buttons["Device 1 Param 1"], self.buttons["Device 1 Param 2"], self.buttons["Device 1 Param 3"], self.buttons["Device 1 Param 4"]]]), priority=1))
 
 
 
@@ -353,7 +381,7 @@ class opencontrol(ControlSurface):
         """Channel Strip Actions"""
         self._channel_strip_layer_mode = AddLayerMode(self._mixer.channel_strip(0), Layer(
                                                                                         name_controls=self.buttons["Track Name"],
-                                                                                        send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]]),
+                                                                                        send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                                                         ))
 
 
@@ -432,7 +460,9 @@ class opencontrol(ControlSurface):
     def enable_page(self):
         pages_color = [Options.page_1_color, Options.page_2_color, Options.page_3_color]
         self.show_message('Page %s' % str(self.current_page+1))
-        self._send_midi(prefix + (20, self.current_page, 247))
+        self._send_midi((240, 122, 29, 247))
+        self._send_midi((240, 122, 29, 1, 19, 40, self.current_page, 247))
+        # self._send_midi(prefix + (50, self.current_page, 247))
         if self.current_page == 2:
             self._pages_0_2.selected_mode = self.pages[2]
             self._pages_0_1.set_enabled(False)
@@ -469,17 +499,18 @@ class opencontrol(ControlSurface):
             self._looper.update()
 
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 30):
-            Options.metronome_blinking = midi_bytes[6]
-            self._transport._on_metronome_changed()
-        if midi_bytes[0:6] == (240, 122, 29, 1, 19, 31):
-            Options.session_box_linked_to_selection = midi_bytes[6]
-            self.check_session_box()
-        if midi_bytes[0:6] == (240, 122, 29, 1, 19, 32):
-            Options.page_1_color = midi_bytes[6]
-        if midi_bytes[0:6] == (240, 122, 29, 1, 19, 33):
-            Options.page_3_color = midi_bytes[6]
-        if midi_bytes[0:6] == (240, 122, 29, 1, 19, 34):
-            Options.page_3_color = midi_bytes[6]
+            if midi_bytes[6] == 0:
+                Options.metronome_blinking = midi_bytes[7]
+                self._transport._on_metronome_changed()
+            if midi_bytes[6] == 1:
+                Options.session_box_linked_to_selection = midi_bytes[7]
+                self.check_session_box()
+        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 32):
+        #     Options.page_1_color = midi_bytes[6]
+        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 33):
+        #     Options.page_3_color = midi_bytes[6]
+        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 34):
+        #     Options.page_3_color = midi_bytes[6]
 
     def check_session_box(self):
         self._session._show_highlight = False
@@ -502,19 +533,19 @@ class opencontrol(ControlSurface):
             self.schedule_message(2, self._request_identification)
             self._request_count += 1
 
-    def _create_m4l_interface(self):
-        """ Creates and sets up the M4L interface for easy interaction from
-        M4L devices in Live 9. """
-        from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
-        self._m4l_interface = M4LInterfaceComponent(controls=self.controls,
-                                                    component_guard=self.component_guard,
-                                                    priority=1)
-        self._m4l_interface.name = 'M4L_Interface'
-        self._m4l_interface.is_private = True
-        self.get_control_names = self._m4l_interface.get_control_names
-        self.get_control = self._m4l_interface.get_control
-        self.grab_control = self._m4l_interface.grab_control
-        self.release_control = self._m4l_interface.release_control
+    # def _create_m4l_interface(self):
+    #     """ Creates and sets up the M4L interface for easy interaction from
+    #     M4L devices in Live 9. """
+    #     from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
+    #     self._m4l_interface = M4LInterfaceComponent(controls=self.controls,
+    #                                                 component_guard=self.component_guard,
+    #                                                 priority=1)
+    #     self._m4l_interface.name = 'M4L_Interface'
+    #     self._m4l_interface.is_private = True
+    #     self.get_control_names = self._m4l_interface.get_control_names
+    #     self.get_control = self._m4l_interface.get_control
+    #     self.grab_control = self._m4l_interface.grab_control
+    #     self.release_control = self._m4l_interface.release_control
         
     def _add_control(self, number):
         return ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, number)

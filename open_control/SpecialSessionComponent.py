@@ -71,10 +71,22 @@ class SessionComponent(SessionBase):
         self._stop_all_clips_button = button
         self._stop_all_clips_button_value.subject = button
 
+    def set_scroll_scenes(self, button):
+        self._scroll_scenes_button = button
+        self._scroll_scenes_button_value.subject = button
+
+    @subject_slot('value')
+    def _scroll_scenes_button_value(self, value):
+        if value > 64:
+            self._scene_bank_down_value(1)
+        if value < 64:
+            self._scene_bank_up_value(1)
+        self._scroll_scenes_button.send_value(64, force=True)
+
     @subject_slot('value')
     def _stop_all_clips_button_value(self, value):
         if value:
-            self.song().stop_all_clips()
+            self.scene_offset()
 
     def set_scene_bank_up_button(self, button):
         self._scene_bank_up_button = button
@@ -115,13 +127,22 @@ class SessionComponent(SessionBase):
         self._track_leds[2] = button
         self._track_bank_right_value.subject = button
         
-
     @subject_slot('value')
     def _track_bank_right_value(self, value):
         if value:
             self.set_offsets(self.track_offset() + 1, self.scene_offset())
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_track = self._song.tracks[self.track_offset()]
+
+    def set_master_volume(self, button):
+        self.master_volume_button=button
+        self._master_volume_button_value.subject = button
+
+    @subject_slot('value')
+    def _master_volume_button_value(self, value):
+        print(self.song().master_track.mixer_device.volume)
+        self.song().master_track.mixer_device.volume = value/127
+
 
     def set_launch_scene_button(self, button):
         self._launch_scene_button = button
@@ -168,10 +189,15 @@ class SessionComponent(SessionBase):
 
     @subject_slot('value')
     def _unfold_track_button_value(self, value):
-        track = self.song().tracks[self._track_offset]
+        if Options.session_box_linked_to_selection:
+            track = self.selected_track
+        else:
+            track = self.song().visible_tracks[self.track_offset()]
         if value:
             if track.is_foldable:
                 track.fold_state = not track.fold_state
+            elif track.can_show_chains:
+                track.is_showing_chains = not track.is_showing_chains
 
     def set_detail_view_toggle(self, button):
         self._detail_view_toggle_button = button
@@ -194,10 +220,6 @@ class SessionComponent(SessionBase):
     def set_redo(self, button):
         self._undo_button = button
         self._redo_value.subject = button
-
-    def set_capture(self, button):
-        self._capture_button = button
-        self._capture_value.subject = button
 
     def set_jump_to_playing_scene(self, button):
         self._rjump_to_playing_scene_button = button
@@ -349,11 +371,6 @@ class SessionComponent(SessionBase):
             if value is not 0:
                 self._song.redo()
 
-    @subject_slot('value')
-    def _capture_value(self, value):
-        if self.is_enabled():
-            if value is not 0:
-                self._song.capture_midi()
 
     @subject_slot('value')
     def _last_selected_parameter_value(self, value):

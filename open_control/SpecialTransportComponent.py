@@ -58,6 +58,17 @@ class TransportComponent(TransportBase):
         self._restart_button = button
         self._restart_button_value.subject = button
 
+
+    def set_capture(self, button):
+        self._capture_button = button
+        self._capture_value.subject = button
+
+    @subject_slot('value')
+    def _capture_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self._song.capture_midi()
+
     def set_punch_in_button(self, button):
         self._punch_in_button = button
         self._punch_in_button_value.subject = button
@@ -128,10 +139,52 @@ class TransportComponent(TransportBase):
         self._loop_button = button
         self._on_loop_button.subject = button
 
+    def set_loop_position(self, button):
+        self._loop_position_button = button
+        self._on_loop_position_button.subject = button
+
+    def set_loop_length(self, button):
+        self._loop_length_button = button
+        self._on_loop_length_button.subject = button
+
+    @subject_slot(u'value')
+    def _on_loop_position_button(self, value):
+        if value > 64:
+            self.song().loop_start += 4
+        if value < 64:
+            try:
+                self.song().loop_start -= 4
+            except:
+                pass
+        self._loop_position_button.send_value(64, force=True)
+
+    @subject_slot(u'value')
+    def _on_loop_length_button(self, value):
+        if value > 64:
+            self.song().loop_length += 4
+        if value < 64:
+            try:
+                self.song().loop_length -= 4
+            except:
+                pass
+        self._loop_length_button.send_value(64, force=True)
+
+
+
     @subject_slot(u'value')
     def _on_loop_button(self, value):
         if value:
             self.song().loop = 0 if self.song().loop else 1
+
+    def set_continue_playing(self, button):
+        self._continue_playing_button = button
+        self._on_continue_playing_button.subject = button
+
+    @subject_slot(u'value')
+    def _on_continue_playing_button(self, value):
+        if value:
+            self.song().continue_playing()
+
 
     def set_record_button(self, button):
         self._record_button = button
@@ -148,6 +201,21 @@ class TransportComponent(TransportBase):
         self._on_session_record_button.subject = button
         self.update()
 
+    def set_skip(self, button):
+        self._skip_button = button
+        self._on_skip_button.subject = button
+
+    @subject_slot(u'value')
+    def _on_skip_button(self, value):
+        if value > 64:
+            self._song.current_song_time += 4
+        if value < 64:
+            try:
+                self._song.current_song_time -= 4
+            except:
+                pass
+        self._skip_button.send_value(64, force=True)
+
     @subject_slot(u'value')
     def _on_session_record_button(self, value):
         if value:
@@ -161,6 +229,19 @@ class TransportComponent(TransportBase):
     def _on_set_or_delete_cue(self, value):
         if value:
             self.song().set_or_delete_cue()
+
+    def set_prev_next_cue_button(self, button):
+        self._prev_next_cue_button = button
+        self._on_jump_to_prev_next_cue.subject = button
+
+    @subject_slot(u'value')
+    def _on_jump_to_prev_next_cue(self, value):
+        if value < 64:
+            self._on_jump_to_prev_cue(1)
+        if value > 64:
+            self._on_jump_to_next_cue(1)
+        self._prev_next_cue_button.send_value(64, force=True)
+
 
     def set_prev_cue_button(self, button):
         self._prev_cue_button = button
@@ -181,6 +262,32 @@ class TransportComponent(TransportBase):
         if value:
             if self.song().can_jump_to_next_cue:
                 self.song().jump_to_next_cue()
+
+
+    def set_h_zoom(self, button):
+        self._h_zoom_button = button
+        self._on_h_zoom_changed.subject = button
+
+    @subject_slot(u'value')
+    def _on_h_zoom_changed(self, value):
+        if value < 64:
+            self.application().view.zoom_view(2, "", True)
+        if value > 64:
+            self.application().view.zoom_view(3, "", True)
+        self._h_zoom_button.send_value(64, force=True)
+
+
+    def set_inc_dec_bpm_button(self, button):
+        self._inc_dec_bpm_button = button
+        self._on_inc_dec_bpm_changed.subject = button
+
+    @subject_slot(u'value')
+    def _on_inc_dec_bpm_changed(self, value):
+        if value < 64:
+            self._on_dec_bpm_changed(1)
+        if value > 64:
+            self._on_inc_bpm_changed(1)
+        self._inc_dec_bpm_button.send_value(64, force=True)
 
     def set_inc_bpm_button(self, button):
         self._inc_bpm_button = button
@@ -248,9 +355,16 @@ class TransportComponent(TransportBase):
         self._on_re_enable_automation_changed.subject = self.song()
         self._on_back_to_arrangement_changed.subject = self.song()
         self._on_midi_recording_quantization_changed.subject = self.song()
+        self._on_capture_changed.subject = self.song()
 
         # self._on_can_jump_to_next_cue_changed.subject = self.song()
         # self._on_can_jump_to_prev_cue_changed.subject = self.song()
+
+    @subject_slot('can_capture_midi')
+    def _on_capture_changed(self):
+        if self._capture_button is not None:
+            color = 100 if self.song().can_capture_midi else 0
+            self._capture_button.send_value(color, force=True)
 
     @subject_slot('midi_recording_quantization')
     def _on_midi_recording_quantization_changed(self):
@@ -347,7 +461,7 @@ class TransportComponent(TransportBase):
         #     self.compare_cue(int(self.song().current_song_time))
         #     self.prev_beat = int(self.song().current_song_time)
         # if quarter is not self.previous_quarter and self._start_stop_button:
-        #     message = [240, 122, 29, 1, 19, 21, 38, 44, quarter]
+        #     message = [240, 122, 29, 1, 19, 51, 38, 44, quarter]
         #     self._start_stop_button._send_midi(tuple(message))
         #     self.previous_quarter = quarter
 
@@ -401,7 +515,7 @@ class TransportComponent(TransportBase):
 
     def _send_sysex_for_name(self, name):
         _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 21, 4, _len]
+        message = [240, 122, 29, 1, 19, 51, 4, _len]
         for i in range(_len):
             if 0 <= ord(name[i])-32 <= 94:
                 message.append(ord(name[i])-32)

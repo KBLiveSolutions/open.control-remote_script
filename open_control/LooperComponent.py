@@ -104,7 +104,7 @@ class LooperComponent(DeviceBase):
     def set_clear_all_button_value(self, value):
         if value:
             for num in range(len(self.looper_list)):
-                self.looper_buttons_list[num+1]._send_midi((240, 122, 29, 1, 19, 23, num+24, 0, 15, 247))
+                self.looper_buttons_list[num+1]._send_midi((240, 122, 29, 1, 19, 53, num+24, 0, 15, 247))
 
     def set_sel_prev_looper(self, button):
         self.sel_prev_looper_button = button
@@ -263,17 +263,17 @@ class LooperComponent(DeviceBase):
         if self.is_enabled() and num in list(self.looper_buttons_list.keys()):
             # Receiving {240, 01, 19, 70, Layout Number, Button number, Note/CC Number, Type, Channel, 247} changes the corresponding button        
             # Assign note num channel 11 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 11, 247))            
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 11, 247))            
             # Assign note num channel 12 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 12, 247))            
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 12, 247))            
             # Assign note num channel 13 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 13, 247))            
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 13, 247))            
             # Assign note num channel 14 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 14, 247))
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 14, 247))
             # Assign note num channel 15 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 15, 247))
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 15, 247))
             # Assign note num channel 16 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 22, num+23, 0, 16, 247))
+            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 16, 247))
             self._looper_main_button_value.subject = self.looper_buttons_list[num]
 
     @subject_slot('value')
@@ -323,7 +323,7 @@ class LooperComponent(DeviceBase):
 
     def _send_sysex_for_name(self, name):       
         _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 21, 2, _len]
+        message = [240, 122, 29, 1, 19, 51, 2, _len]
         for i in range(_len):
             if 0 <= ord(name[i])-32 <= 94:
                 message.append(ord(name[i])-32)
