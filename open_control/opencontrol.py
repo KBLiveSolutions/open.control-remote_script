@@ -348,7 +348,9 @@ class opencontrol(ControlSurface):
                                                             arm_buttons=self.arm_buttons,
                                                             solo_buttons=self.solo_buttons,
                                                             prehear_volume_control=self.buttons["Cue Volume"],
-                                                            master_volume=self.buttons["Master Volume"]
+                                                            master_volume=self.buttons["Master Volume"],
+                                                            volume=self.buttons["Volume"],
+                                                            pan=self.buttons["Pan"]
                                                             ))
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],

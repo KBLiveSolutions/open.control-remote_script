@@ -17,7 +17,7 @@ class MixerComponent(MixerBase):
     ring handling and observe the status of scenes. """
 
     channel_strip_component_type = ChannelStripComponent
-    
+
     def __init__(self, *a, **k):
         super(MixerComponent, self).__init__(*a, **k)
         self._rgb_controls = None
@@ -39,6 +39,11 @@ class MixerComponent(MixerBase):
     def set_master_volume(self, button):
         self.master_strip().set_volume_control(button)
 
+    def set_volume(self, button):
+        self.selected_strip().set_volume_control(button)
+
+    def set_pan(self, button):
+        self.selected_strip().set_pan_control(button)
 
     # def on_selected_track_changed(self):
     #     track_offset = 0
