@@ -222,7 +222,7 @@ class opencontrol(ControlSurface):
         self._request_count = 0
         self._last_sent_layout_byte = None
         self._skin = make_default_skin()
-
+        """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
             self._session = SessionComponent( num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
@@ -243,6 +243,7 @@ class opencontrol(ControlSurface):
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
 
     def _create_buttons(self):
+        """ Create all the buttons one by one then buils the button matrixes if needed"""
         self.buttons = {}
         for control in button_actions:
             self.buttons[control] = self.make_button(button_actions[control], MIDI_CHANNEL, msg_type=MIDI_CC_TYPE, name=control)
@@ -279,6 +280,7 @@ class opencontrol(ControlSurface):
         return ButtonElement(True, msg_type, channel, identifier, skin=self._skin, name=name, resource_type=PrioritizedResource if is_modifier else None)
 
     def _create_pages(self):
+        """ Create all the pages and Layers"""
         self._pages_0_1 = ModesComponent(name='pages_0_1', is_enabled=False)
         self._pages_0_2 = ModesComponent(name='pages_0_2', is_enabled=False)
         """Session Actions"""
@@ -365,8 +367,7 @@ class opencontrol(ControlSurface):
                                                                     selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Selected Device Param 1"], self.buttons["Selected Device Param 2"], self.buttons["Selected Device Param 3"], self.buttons["Selected Device Param 4"]]]),
                                                                     first_device_parameter=ButtonMatrixElement(rows=[[self.buttons["Device 1 Param 1"], self.buttons["Device 1 Param 2"], self.buttons["Device 1 Param 3"], self.buttons["Device 1 Param 4"]]]), priority=1))
 
-
-
+        """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
                                                                     add_looper = self.buttons["+ Add Looper"],
                                                                     sel_prev_looper=self.buttons["⧀ Prev Looper"],
@@ -408,6 +409,7 @@ class opencontrol(ControlSurface):
         self._pages_0_2.set_enabled(False)
         self._pages_0_1.set_enabled(True)
 
+    """All the pages action happen at this level of the script, so create the Page switching buttons and functions"""
     def set_page_0_1_button(self, button):
         self.page_0_1_button = button
         self._on_page_0_1_button_value.subject = button
@@ -484,11 +486,14 @@ class opencontrol(ControlSurface):
         self._looper.update()
 
     def handle_sysex(self, midi_bytes):
+        """Handle Sysex messages"""
+        """ Handles handshake message with the Controller"""
         if not self._has_been_identified and midi_bytes == REPLY_MSG:
             self._has_been_identified = True
             self.set_enabled(True)
             self.set_highlighting_session_component(self._session)
             self.schedule_message(1, self.refresh_state)
+        """ If Handshake successful, call the update function for each Layout"""
         if midi_bytes == ACKNOWLEDGMENT_MSG:
             self._session.scene(0)._on_scene_name_changed()
             self._mixer.channel_strip(0)._on_track_name_changed()
@@ -499,11 +504,13 @@ class opencontrol(ControlSurface):
             self._transport.update()
             self._device.update()
             self._looper.update()
-
+        """ Handle Option received"""
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 30):
+            """ Option 0 = Metronome blinking"""
             if midi_bytes[6] == 0:
                 Options.metronome_blinking = midi_bytes[7]
                 self._transport._on_metronome_changed()
+            """ Option 1 = Session Box enabled"""
             if midi_bytes[6] == 1:
                 Options.session_box_linked_to_selection = midi_bytes[7]
                 self.check_session_box()
@@ -520,12 +527,12 @@ class opencontrol(ControlSurface):
             self._session._show_highlight = True
         self._session._do_show_highlight()
 
-    def port_settings_changed(self):
-        self.set_enabled(False)
-        self.set_highlighting_session_component(None)
-        self._request_count = 0
-        self._has_been_identified = False
-        self._request_identification()
+    # def port_settings_changed(self):
+    #     self.set_enabled(False)
+    #     self.set_highlighting_session_component(None)
+    #     self._request_count = 0
+    #     self._has_been_identified = False
+    #     self._request_identification()
 
     def _request_identification(self):
         """ Sends request and schedules message to call this method again and do
@@ -552,8 +559,8 @@ class opencontrol(ControlSurface):
     def _add_control(self, number):
         return ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, number)
 
-    def _add_slider(self, number):
-        return EncoderElement(MIDI_CC_TYPE, MIDI_CHANNEL, number, Live.MidiMap.MapMode.absolute)
+    # def _add_slider(self, number):
+    #     return EncoderElement(MIDI_CC_TYPE, MIDI_CHANNEL, number, Live.MidiMap.MapMode.absolute)
 
     def disconnect(self):
         super(opencontrol, self).disconnect()
