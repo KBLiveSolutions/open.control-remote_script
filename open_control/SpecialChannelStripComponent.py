@@ -36,13 +36,13 @@ class ChannelStripComponent(ChannelStripBase):
         super(ChannelStripComponent, self).set_mute_button(button)
         # self.update()
 
-    def set_input_level(self, button):
-        self._input_level_control = button
-        # self.update()
+    # def set_input_level(self, button):
+    #     self._input_level_control = button
+    #     # self.update()
 
-    def set_output_level(self, button):
-        self._output_level_control = button
-        # self.update()
+    # def set_output_level(self, button):
+    #     self._output_level_control = button
+    #     # self.update()
 
     def _on_mute_changed(self):
         if self.is_enabled() and self._mute_button_led != None:
@@ -99,27 +99,27 @@ class ChannelStripComponent(ChannelStripBase):
         self._on_arm_changed()
         # self.set_output_level_listener()
 
-    def set_input_level_listener(self):
-        try:
-            self._track.add_input_meter_level_listener(self._on_input_level_changed)
-        except:
-            pass
+    # def set_input_level_listener(self):
+    #     try:
+    #         self._track.add_input_meter_level_listener(self._on_input_level_changed)
+    #     except:
+    #         pass
 
-    def _on_input_level_changed(self):
-        if self.is_enabled() and self._input_level_control:
-            leveldb = (self._track.input_meter_level)**3
-            level = int(leveldb*127)
+    # def _on_input_level_changed(self):
+    #     if self.is_enabled() and self._input_level_control:
+    #         leveldb = (self._track.input_meter_level)**3
+    #         level = int(leveldb*127)
             
-    def set_output_level_listener(self):
-        try:
-            self._track.add_output_meter_level_listener(self._on_output_level_changed)
-        except:
-            pass
+    # def set_output_level_listener(self):
+    #     try:
+    #         self._track.add_output_meter_level_listener(self._on_output_level_changed)
+    #     except:
+    #         pass
 
-    def _on_output_level_changed(self):
-        if self.is_enabled() and self._output_level_control:
-            leveldb = (self._track.output_meter_level)**3
-            level = int(leveldb*127)
+    # def _on_output_level_changed(self):
+    #     if self.is_enabled() and self._output_level_control:
+    #         leveldb = (self._track.output_meter_level)**3
+    #         level = int(leveldb*127)
  
     @subject_slot('name')
     def _on_track_name_changed(self):

@@ -36,7 +36,7 @@ class TransportComponent(TransportBase):
 
         super(TransportComponent, self).__init__(*a, **k)
         self._setup_transport_listeners()
-        self.compare_cue(int(self.song().current_song_time))
+        self.compare_cue()
         self.restart_position = self.song().current_song_time
 
     def disconnect(self):
@@ -297,6 +297,7 @@ class TransportComponent(TransportBase):
     def _on_inc_bpm_changed(self, value):
         if self._inc_bpm_button != None and value:
             self.song().tempo += 1
+            self._send_direct_sysex_for_name(str(self.song().tempo)+ " BPM")
 
     def set_dec_bpm_button(self, button):
         self._dec_bpm_button = button
@@ -306,6 +307,7 @@ class TransportComponent(TransportBase):
     def _on_dec_bpm_changed(self, value):
         if self._dec_bpm_button != None and value:
             self.song().tempo -= 1
+            self._send_direct_sysex_for_name(str(self.song().tempo)+ " BPM")
 
     def set_back_to_arrangement_button(self, button):
         self._back_to_arrangement_button = button
@@ -343,8 +345,8 @@ class TransportComponent(TransportBase):
         self._on_midi_recording_quantization_changed()
 
     def _setup_transport_listeners(self):
-        self.song().add_current_song_time_listener(self.on_time_change)
-        self._on_start_stop_changed.subject = self.song()
+        # self.song().add_current_song_time_listener(self.on_time_change)
+        # self._on_start_stop_changed.subject = self.song()
         self._on_loop_changed.subject = self.song()
         self._on_metronome_changed.subject = self.song()
         self._on_record_changed.subject = self.song()
@@ -387,9 +389,9 @@ class TransportComponent(TransportBase):
 
     @subject_slot('cue_points')
     def _on_cue_points_changed(self): 
-        self.on_time_change()
+        self.compare_cue()
 
-    @subject_slot('is_playing')
+    # @subject_slot('is_playing')
     def _on_start_stop_changed(self):
         if self.is_enabled() and self._start_stop_button and self._metronome_button:
             if self.song().is_playing:
@@ -453,8 +455,8 @@ class TransportComponent(TransportBase):
                 color = 0
             self._record_button.send_value(color, force=True)
 
-    def on_time_change(self):
-        self.compare_cue(int(self.song().current_song_time))
+    # def on_time_change(self):
+    #     self.compare_cue(int(self.song().current_song_time))
         # time = self.song().get_current_beats_song_time()
         # quarter = time.sub_division
         # if int(self.song().current_song_time) is not self.prev_beat:
@@ -465,7 +467,8 @@ class TransportComponent(TransportBase):
         #     self._start_stop_button._send_midi(tuple(message))
         #     self.previous_quarter = quarter
 
-    def compare_cue(self, beat):
+    def compare_cue(self):
+        beat = int(self.song().current_song_time)
         highest_cue = 0
         for cue_point in self.song().cue_points:
             if cue_point.time <= beat and not self.check_hide(cue_point.name):
@@ -524,3 +527,16 @@ class TransportComponent(TransportBase):
         message.append(247)    
         if self._name_controls:
             self._name_controls._send_midi(tuple(message))
+
+    def _send_direct_sysex_for_name(self, name):
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 54, 3, _len]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self._name_controls:
+            self._name_controls._send_midi(tuple(message))
+

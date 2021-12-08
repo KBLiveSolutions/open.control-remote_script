@@ -37,16 +37,42 @@ class MixerComponent(MixerBase):
         super(MixerComponent, self).on_track_list_changed()
     
     def set_master_volume(self, button):
+        self.master_volume_button = button
         self.master_strip().set_volume_control(button)
+        self._master_volume_value.subject = button
 
     def set_volume(self, button):
         self.selected_strip().set_volume_control(button)
+        self._volume_value.subject = button
 
     def set_pan(self, button):
         self.selected_strip().set_pan_control(button)
+        self._pan_value.subject = button
 
-    # def on_selected_track_changed(self):
-    #     track_offset = 0
-    #     sel_track = self._song.view.selected_track
-    #     if sel_track in self._song.visible_tracks:
-    #         track_offset = list(self._song.visible_tracks).index(sel_track)
+    @subject_slot('value')
+    def _master_volume_value(self, value):
+        volume = self.song().master_track.mixer_device.volume
+        self._send_direct_sysex_for_name(str(volume))
+
+    @subject_slot('value')
+    def _volume_value(self, value):
+        volume = self.song().view.selected_track.mixer_device.volume
+        self._send_direct_sysex_for_name(str(volume))
+
+    @subject_slot('value')
+    def _pan_value(self, value):
+        panning = self.song().view.selected_track.mixer_device.panning
+        self._send_direct_sysex_for_name(str(panning))
+
+    def _send_direct_sysex_for_name(self, name):
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 54, 3, _len]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self.master_volume_button:
+            self.master_volume_button._send_midi(tuple(message))
+

@@ -197,14 +197,15 @@ slider_actions = {
     "Pan": 96,
     "Send A": 59,
     "Send B": 60,
-    "Selected Device Param 1": 61,
-    "Selected Device Param 2": 62,
-    "Selected Device Param 3": 63,
-    "Selected Device Param 4": 64,
-    "Device 1 Param 1": 92,
-    "Device 1 Param 2": 93,
-    "Device 1 Param 3": 94,
-    "Device 1 Param 4": 95,
+    "--- Selected Device ---": 0,
+    "① Parameter 1": 61,
+    "② Parameter 2": 62,
+    "③ Parameter 3": 63,
+    "④ Parameter 4": 64,
+    # "Device 1 Param 1": 92,
+    # "Device 1 Param 2": 93,
+    # "Device 1 Param 3": 94,
+    # "Device 1 Param 4": 95,
     "--- Custom ---": 0,
     "Custom MIDI": 122
   }
@@ -221,6 +222,9 @@ class opencontrol(ControlSurface):
         self._has_been_identified = False
         self._request_count = 0
         self._last_sent_layout_byte = None
+        self.prev_beat = False
+        self.previous_quarter = 0
+        self.quarter_lock = False
         self._skin = make_default_skin()
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
@@ -234,6 +238,8 @@ class opencontrol(ControlSurface):
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
+            self.song().add_current_song_time_listener(self.on_time_change)
+            self.song().add_is_playing_listener(self.on_is_playing_change)
             # self.set_device_component(self._looper)
             self.check_session_box()
             if Live.Application.get_application().get_major_version() == 9:
@@ -364,8 +370,8 @@ class opencontrol(ControlSurface):
                                                                     store_variation_button=self.buttons["◦ Store Variation"],
                                                                     recall_variation_button=self.buttons["↩︎ Recall Last Used"],
                                                                     randomize_macros_button=self.buttons["⌁ Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Selected Device Param 1"], self.buttons["Selected Device Param 2"], self.buttons["Selected Device Param 3"], self.buttons["Selected Device Param 4"]]]),
-                                                                    first_device_parameter=ButtonMatrixElement(rows=[[self.buttons["Device 1 Param 1"], self.buttons["Device 1 Param 2"], self.buttons["Device 1 Param 3"], self.buttons["Device 1 Param 4"]]]), priority=1))
+                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["① Parameter 1"], self.buttons["② Parameter 2"], self.buttons["③ Parameter 3"], self.buttons["④ Parameter 4"]]]),
+                                                                    priority=1))
 
         """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
@@ -527,12 +533,51 @@ class opencontrol(ControlSurface):
             self._session._show_highlight = True
         self._session._do_show_highlight()
 
-    # def port_settings_changed(self):
-    #     self.set_enabled(False)
-    #     self.set_highlighting_session_component(None)
-    #     self._request_count = 0
-    #     self._has_been_identified = False
-    #     self._request_identification()
+    def on_time_change(self):
+  
+        if int(self.song().current_song_time) is not self.prev_beat:
+            self.prev_beat = int(self.song().current_song_time)
+            self._do_send_midi(tuple([251]))
+
+        """ BLINK """
+        quarter = self.song().get_current_beats_song_time().sub_division
+        if quarter is not self.previous_quarter:
+            self.previous_quarter = quarter
+            self.send_clock()
+            self._transport.compare_cue()
+
+        # """ FADE """  
+        # quarter = self.song().get_current_beats_song_time().ticks%20
+        # if quarter is not self.previous_quarter:
+        #     # print(quarter)
+        #     if quarter < 10 and not self.quarter_lock:
+        #         self.quarter_lock = True
+        #         # print("on")
+        #         self.previous_quarter = quarter
+        #         self.send_clock()
+        #         self._transport.compare_cue()
+        #     if quarter > 5 and self.quarter_lock:
+        #         self.quarter_lock = False
+
+    def on_is_playing_change(self):
+        self._transport._on_start_stop_changed()
+        if self.song().is_playing:
+            self._do_send_midi(tuple([250]))
+        else:
+            self._do_send_midi(tuple([252]))
+            self.quarter_lock = False
+            self.previous_quarter = 100
+
+
+    def send_clock(self):
+        self._do_send_midi(tuple([248]))
+
+    def port_settings_changed(self):
+        self.set_enabled(False)
+        self.set_highlighting_session_component(None)
+        self._request_count = 0
+        self._has_been_identified = False
+        self._request_identification()
 
     def _request_identification(self):
         """ Sends request and schedules message to call this method again and do

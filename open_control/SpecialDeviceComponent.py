@@ -141,13 +141,17 @@ class DeviceComponent(DeviceComponentBase):
 
     def set_selected_device_parameters(self, buttons):
         self.selected_device_parameters = buttons
+        self.set_parameter_controls(self.selected_device_parameters)
         if buttons:
             self._on_selected_device_parameter_value.subject = buttons
 
     @subject_slot('value')
     def _on_selected_device_parameter_value(self, *args):
         self._device = self.song().view.selected_track.view.selected_device
-        self.set_parameter_controls(self.selected_device_parameters)
+        banks = parameter_banks(self._device) 
+        parameter = banks[0][args[1]]
+        print(parameter.str_for_value(parameter.value))
+        self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
 
  
     # def set_first_device_parameter(self, buttons):
@@ -203,6 +207,18 @@ class DeviceComponent(DeviceComponentBase):
     def _send_sysex_for_name(self, name):
         _len = min(len(name), 32)
         message = [240, 122, 29, 1, 19, 51, 3, _len]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self._name_controls:
+            self._name_controls._send_midi(tuple(message))
+
+    def _send_direct_sysex_for_name(self, name):
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 54, 3, _len]
         for i in range(_len):
             if 0 <= ord(name[i])-32 <= 94:
                 message.append(ord(name[i])-32)

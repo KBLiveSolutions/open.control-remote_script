@@ -340,10 +340,12 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _last_selected_parameter_value(self, value):
         if self.is_enabled() and self.song().view.selected_parameter:
-            _min = self.song().view.selected_parameter.min
-            _max = self.song().view.selected_parameter.max
+            parameter = self.song().view.selected_parameter
+            _min = parameter.min
+            _max = parameter.max
             _value = (_max - _min) * value / 127 + _min
-            self.song().view.selected_parameter.value = _value
+            parameter.value = _value
+            self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
 
     def _setup_scene_listeners(self):
         self._on_scene_triggered.replace_subjects(self._song.scenes, count())
@@ -435,3 +437,15 @@ class SessionComponent(SessionBase):
         super(SessionComponent, self).update()
         self._update_position_status_control()
         self.on_selected_scene_changed()
+
+    def _send_direct_sysex_for_name(self, name):
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 54, 3, _len]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self._last_selected_parameter_button is not None:
+            self._last_selected_parameter_button._send_midi(tuple(message))
