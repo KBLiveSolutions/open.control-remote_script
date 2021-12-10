@@ -93,6 +93,9 @@ class ChannelStripComponent(ChannelStripBase):
             if value is not 0 or not self._trigger_session_record_button.is_momentary():
                 self.song().trigger_session_record()
 
+
+
+
     def update(self):
         super(ChannelStripComponent, self).update()
         self._on_track_name_changed()
@@ -136,4 +139,4 @@ class ChannelStripComponent(ChannelStripBase):
                 message.append(95)
         message.append(247)    
         self._name_controls._send_midi(tuple(message))
-        self._arm_button_led.send_value(12, force=True)
+        # self._arm_button_led.send_value(12, force=True)

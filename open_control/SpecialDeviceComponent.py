@@ -2,6 +2,7 @@ from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase
 from _Framework.SubjectSlot import subject_slot
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
 from . import Colors, Options
+import time
 
 import Live
 import logging, traceback
@@ -17,6 +18,7 @@ class DeviceComponent(DeviceComponentBase):
         self._next_variation_button = None
         self.first_device_parameters = None
         self.selected_device_parameters = None
+        self.last_message_time = 0
         super(DeviceComponent, self).__init__(*a, **k)
         self.selected_device_listener()
 
@@ -150,7 +152,6 @@ class DeviceComponent(DeviceComponentBase):
         self._device = self.song().view.selected_track.view.selected_device
         banks = parameter_banks(self._device) 
         parameter = banks[0][args[1]]
-        print(parameter.str_for_value(parameter.value))
         self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
 
  
@@ -225,5 +226,6 @@ class DeviceComponent(DeviceComponentBase):
             else:
                 message.append(95)
         message.append(247)    
-        if self._name_controls:
+        if self._name_controls and time.time() - self.last_message_time > 0.05  :
             self._name_controls._send_midi(tuple(message))
+            self.last_message_time = time.time()

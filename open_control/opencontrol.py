@@ -358,7 +358,8 @@ class opencontrol(ControlSurface):
                                                             prehear_volume_control=self.buttons["Cue Volume"],
                                                             master_volume=self.buttons["Master Volume"],
                                                             volume=self.buttons["Volume"],
-                                                            pan=self.buttons["Pan"]
+                                                            pan=self.buttons["Pan"],
+                                                            send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
@@ -389,8 +390,7 @@ class opencontrol(ControlSurface):
 
         """Channel Strip Actions"""
         self._channel_strip_layer_mode = AddLayerMode(self._mixer.channel_strip(0), Layer(
-                                                                                        name_controls=self.buttons["Track Name"],
-                                                                                        send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
+                                                                                        name_controls=self.buttons["Track Name"]
                                                                                         ))
 
 

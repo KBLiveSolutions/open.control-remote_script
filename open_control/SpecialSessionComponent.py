@@ -47,6 +47,7 @@ class SessionComponent(SessionBase):
         self._show_highlight = True
         self._setup_scene_listeners()
         self.application().view.add_focused_document_view_listener(self.on_view_changed)
+        self.song().view.add_selected_parameter_listener(self.on_selected_parameter_changed)
         clip_color_table = Colors.LIVE_COLORS_TO_MIDI_VALUES.copy()
         clip_color_table[16777215] = 119
         self.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
@@ -182,6 +183,16 @@ class SessionComponent(SessionBase):
                 self._mixer.set_track_offset(self._track_offset)
                 self._update_position_status_control()
 
+    def on_selected_parameter_changed(self):
+        parameter = self.song().view.selected_parameter
+        self._last_selected_parameter_button.send_value(self.get_parameter_value(parameter, parameter.value), force=True)
+
+    def get_parameter_value(self, parameter, value):
+        _min = parameter.min
+        _max = parameter.max
+        _value =  (value - _min )/ (_max - _min)
+        return _value * 127
+
     """ Buttons callbacks """
 
     @subject_slot('value')
@@ -311,7 +322,7 @@ class SessionComponent(SessionBase):
     def _launch_scene_value(self, value):
         if self.is_enabled():
             if value is not 0:
-                self._song.scenes[self._scene_offset].fire()
+                self._song.scenes[self._scene_offset].fire_as_selected()
 
     @subject_slot('value')
     def _add_audio_track_value(self, value):
@@ -341,11 +352,15 @@ class SessionComponent(SessionBase):
     def _last_selected_parameter_value(self, value):
         if self.is_enabled() and self.song().view.selected_parameter:
             parameter = self.song().view.selected_parameter
-            _min = parameter.min
-            _max = parameter.max
-            _value = (_max - _min) * value / 127 + _min
-            parameter.value = _value
-            self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
+            parameter.value = self.get_parameter_MIDI_value(parameter, value)
+            string = parameter.str_for_value(parameter.value)
+            self._send_direct_sysex_for_name(string[:3]+string[3:])
+
+    def get_parameter_MIDI_value(self, parameter, value):
+        _min = parameter.min
+        _max = parameter.max
+        _value = (_max - _min) * value / 127 + _min
+        return _value
 
     def _setup_scene_listeners(self):
         self._on_scene_triggered.replace_subjects(self._song.scenes, count())

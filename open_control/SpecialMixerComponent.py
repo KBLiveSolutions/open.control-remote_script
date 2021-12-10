@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from itertools import count
 from _Framework.SubjectSlot import subject_slot
+import time
 
 from _Framework.MixerComponent import MixerComponent as MixerBase
 from _Framework.SubjectSlot import subject_slot_group
@@ -22,6 +23,7 @@ class MixerComponent(MixerBase):
         super(MixerComponent, self).__init__(*a, **k)
         self._rgb_controls = None
         self._name_controls = None
+        self.last_message_time = 0
 
     def disconnect(self):
         super(MixerComponent, self).disconnect()
@@ -54,6 +56,15 @@ class MixerComponent(MixerBase):
         volume = self.song().master_track.mixer_device.volume
         self._send_direct_sysex_for_name(str(volume))
 
+    def set_send_controls(self, buttons):
+        self.selected_strip().set_send_controls(buttons)
+        self._send_controls_value.subject = buttons
+
+    @subject_slot('value')
+    def _send_controls_value(self, *args):
+        sends = self.song().view.selected_track.mixer_device.sends[args[1]]
+        self._send_direct_sysex_for_name(str(sends))
+
     @subject_slot('value')
     def _volume_value(self, value):
         volume = self.song().view.selected_track.mixer_device.volume
@@ -73,6 +84,7 @@ class MixerComponent(MixerBase):
             else:
                 message.append(95)
         message.append(247)    
-        if self.master_volume_button:
+        if self.master_volume_button and time.time() - self.last_message_time > 0.05  :
             self.master_volume_button._send_midi(tuple(message))
+            self.last_message_time = time.time()
 

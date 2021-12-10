@@ -4,7 +4,7 @@ from _Framework.TransportComponent import TransportComponent as TransportBase
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ControlSurface import ControlSurface
 from . import Options
-
+import time
 import logging, traceback
 logger = logging.getLogger(__name__)
 # def print(text):
@@ -33,6 +33,7 @@ class TransportComponent(TransportBase):
         self.groove_amount = None
         self.temp_midi_rec_q = Live.Song.RecordingQuantization.rec_q_sixtenth
         self.previous_quarter = 0
+        self.last_message_time = 0
 
         super(TransportComponent, self).__init__(*a, **k)
         self._setup_transport_listeners()
@@ -536,7 +537,7 @@ class TransportComponent(TransportBase):
                 message.append(ord(name[i])-32)
             else:
                 message.append(95)
-        message.append(247)    
-        if self._name_controls:
+        if self._name_controls and time.time() - self.last_message_time > 0.05  :
             self._name_controls._send_midi(tuple(message))
+            self.last_message_time = time.time()
 
