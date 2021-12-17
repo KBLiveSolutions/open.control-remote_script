@@ -4,6 +4,8 @@ from __future__ import absolute_import
 # from builtins import range
 from itertools import count
 
+import time
+
 from _Framework.SessionComponent import SessionComponent as SessionBase
 from _Framework.SubjectSlot import subject_slot_group, subject_slot
 # from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotBase
@@ -41,6 +43,8 @@ class SessionComponent(SessionBase):
         self._main_view_toggle_button = None
         self._detail_view_toggle_button = None
         self._track_leds = [None, None, None]
+        self.last_parameter_button_changing = False
+        self.last_message_time = 0
         self.view = None
         super(SessionComponent, self).__init__(*a, **k)
         self.selected_track = self.song().view.selected_track
@@ -185,7 +189,16 @@ class SessionComponent(SessionBase):
 
     def on_selected_parameter_changed(self):
         parameter = self.song().view.selected_parameter
+        print(["on_selected_parameter_changed", self.get_parameter_value(parameter, parameter.value)])
         self._last_selected_parameter_button.send_value(self.get_parameter_value(parameter, parameter.value), force=True)
+        self._on_last_selected_parameter_changed.subject = parameter
+
+    @subject_slot('value')
+    def _on_last_selected_parameter_changed(self):
+        if not self.last_parameter_button_changing:
+            parameter = self.song().view.selected_parameter
+            print(round(parameter.value*127))
+            self._last_selected_parameter_button.send_value(round(parameter.value*127), force=True)
 
     def get_parameter_value(self, parameter, value):
         _min = parameter.min
@@ -351,10 +364,12 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _last_selected_parameter_value(self, value):
         if self.is_enabled() and self.song().view.selected_parameter:
+            self.last_parameter_button_changing = True
             parameter = self.song().view.selected_parameter
             parameter.value = self.get_parameter_MIDI_value(parameter, value)
             string = parameter.str_for_value(parameter.value)
             self._send_direct_sysex_for_name(string[:3]+string[3:])
+            self.last_parameter_button_changing = False
 
     def get_parameter_MIDI_value(self, parameter, value):
         _min = parameter.min
@@ -462,5 +477,6 @@ class SessionComponent(SessionBase):
             else:
                 message.append(95)
         message.append(247)    
-        if self._last_selected_parameter_button is not None:
+        if self._last_selected_parameter_button is not None and time.time() - self.last_message_time > Options.display_time:
             self._last_selected_parameter_button._send_midi(tuple(message))
+            self.last_message_time = time.time()

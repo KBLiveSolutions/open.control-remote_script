@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from itertools import count
 from _Framework.SubjectSlot import subject_slot
 import time
+from . import Options
 
 from _Framework.MixerComponent import MixerComponent as MixerBase
 from _Framework.SubjectSlot import subject_slot_group
@@ -84,7 +85,7 @@ class MixerComponent(MixerBase):
             else:
                 message.append(95)
         message.append(247)    
-        if self.master_volume_button and time.time() - self.last_message_time > 0.05  :
+        if self.master_volume_button and time.time() - self.last_message_time > Options.display_time  :
             self.master_volume_button._send_midi(tuple(message))
             self.last_message_time = time.time()
 

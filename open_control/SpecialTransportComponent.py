@@ -537,7 +537,8 @@ class TransportComponent(TransportBase):
                 message.append(ord(name[i])-32)
             else:
                 message.append(95)
-        if self._name_controls and time.time() - self.last_message_time > 0.05  :
+        message.append(247)    
+        if self._name_controls and time.time() - self.last_message_time > Options.display_time  :
             self._name_controls._send_midi(tuple(message))
             self.last_message_time = time.time()
 

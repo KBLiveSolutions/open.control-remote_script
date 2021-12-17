@@ -7,3 +7,5 @@ metronome_blinking = 0
 page_1_color = 13
 page_2_color = 52
 page_3_color = 21
+
+display_time = 0.1
