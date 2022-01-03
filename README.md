@@ -1,5 +1,4 @@
-
-![open.control](https://github.com/KBLiveSolutions/open.control/blob/main/assets/images/logo_big.png)
+<p align=center><img src="https://github.com/KBLiveSolutions/open.control/blob/main/assets/images/logo_big.png" alt="logo" width="400"/></p>
 
 # Remote Script for open·control
 
