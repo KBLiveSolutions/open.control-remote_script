@@ -93,6 +93,8 @@ button_actions = {
     "▶ Launch Scene": 13,
     "⬆ Sel Prev Scene": 14,
     "⬇ Sel Next Scene": 15,
+    "⬆+4 Jump 4 Scenes Up": 105,
+    "⬇-4 Jump 4 Scenes Down": 106,
     "⥴ Jump to Playing Scene": 16,
     "⥅ Insert Scene": 17,
     "⇴ Capture and Insert Scene": 43,
@@ -292,6 +294,8 @@ class opencontrol(ControlSurface):
         """Session Actions"""
         self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["⬆ Sel Prev Scene"],
                                                                     scene_bank_down_button=self.buttons["⬇ Sel Next Scene"],
+                                                                    scene_bank_up_x4_button=self.buttons["⬆+4 Jump 4 Scenes Up"],
+                                                                    scene_bank_down_x4_button=self.buttons["⬇-4 Jump 4 Scenes Down"],
                                                                     # scene_launch_buttons=self.scene_launch_buttons,
                                                                     launch_scene_button=self.buttons["▶ Launch Scene"],
                                                                     track_bank_left_button=self.buttons["← Sel Prev Track"],

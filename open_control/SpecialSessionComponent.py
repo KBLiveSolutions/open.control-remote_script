@@ -89,6 +89,14 @@ class SessionComponent(SessionBase):
         self._scene_bank_down_button = button
         self._scene_bank_down_value.subject = button
 
+    def set_scene_bank_up_x4_button(self, button):
+        self._scene_bank_up_x4_button = button
+        self._scene_bank_up_x4_value.subject = button
+
+    def set_scene_bank_down_x4_button(self, button):
+        self._scene_bank_down_x4_button = button
+        self._scene_bank_down_x4_value.subject = button
+
     def set_track_bank_left_button(self, button):
         self._track_bank_left_button = button
         self._track_leds[0] = button
@@ -241,7 +249,22 @@ class SessionComponent(SessionBase):
             self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_track = self._song.tracks[self.track_offset()]
- 
+
+    @subject_slot('value')
+    def _scene_bank_up_x4_value(self, value):
+        if value:
+            self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 4))
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
+
+    @subject_slot('value')
+    def _scene_bank_down_x4_value(self, value):
+        if value:
+            self.set_offsets(self.track_offset(), self.scene_offset() + 4)
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
+
+
     @subject_slot('value')
     def _track_bank_right_value(self, value):
         if value:
