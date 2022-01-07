@@ -518,7 +518,7 @@ class opencontrol(ControlSurface):
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 30):
             """ Option 0 = Metronome blinking"""
             if midi_bytes[6] == 0:
-                Options.metronome_blinking = midi_bytes[7]
+                Options.metronome_blinking = 0 if midi_bytes[7] == 1 else 1
                 self._transport._on_metronome_changed()
             """ Option 1 = Session Box enabled"""
             if midi_bytes[6] == 1:
