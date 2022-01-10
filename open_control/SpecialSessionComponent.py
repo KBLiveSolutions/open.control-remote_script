@@ -205,8 +205,8 @@ class SessionComponent(SessionBase):
     def _on_last_selected_parameter_changed(self):
         if not self.last_parameter_button_changing:
             parameter = self.song().view.selected_parameter
-            print(round(parameter.value*127))
-            self._last_selected_parameter_button.send_value(round(parameter.value*127), force=True)
+            # self.get_parameter_MIDI_value(parameter, parameter.value)
+            # self._last_selected_parameter_button.send_value(self.get_parameter_MIDI_value(parameter, parameter.value), force=True)
 
     def get_parameter_value(self, parameter, value):
         _min = parameter.min
@@ -397,7 +397,7 @@ class SessionComponent(SessionBase):
     def get_parameter_MIDI_value(self, parameter, value):
         _min = parameter.min
         _max = parameter.max
-        _value = (_max - _min) * value / 127 + _min
+        _value = value / 127 * (_max - _min) + _min
         return _value
 
     def _setup_scene_listeners(self):
