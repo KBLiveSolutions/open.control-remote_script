@@ -131,7 +131,7 @@ class ChannelStripComponent(ChannelStripBase):
            
     def _send_sysex_for_name(self, name):
         _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 51, 1, _len]
+        message = [240, 122, 29, 1, 19, 51, 1]
         for i in range(_len):
             if 0 <= ord(name[i])-32 <= 94:
                 message.append(ord(name[i])-32)

@@ -39,7 +39,7 @@ class SceneComponent(SceneBase):
                 if len(name) == 0:
                     name = str(list(self._song.scenes).index(self._scene)+1)
                 _len = min(len(name), 32)
-                message = [240, 122, 29, 1, 19, 51, 0, _len]
+                message = [240, 122, 29, 1, 19, 51, 0]
                 for i in range(_len):
                     if 0 <= ord(name[i])-32 <= 94:
                         message.append(ord(name[i])-32)
