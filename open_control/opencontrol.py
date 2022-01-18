@@ -95,6 +95,10 @@ button_actions = {
     "⬇ Sel Next Scene": 15,
     "⬆+4 Jump 4 Scenes Up": 105,
     "⬇-4 Jump 4 Scenes Down": 106,
+    "⦷ Fixed Length Rec 1 Bars": 107,
+    "⦷ Fixed Length Rec 2 Bars": 108,
+    "⦷ Fixed Length Rec 4 Bars": 109,
+    "⦷ Fixed Length Rec 8 Bars": 110,
     "⥴ Jump to Playing Scene": 16,
     "⥅ Insert Scene": 17,
     "⇴ Capture and Insert Scene": 43,
@@ -319,6 +323,10 @@ class opencontrol(ControlSurface):
                                                                     detail_view_toggle=self.buttons["Clip/Device Toggle"],
                                                                     # master_volume=self.buttons["Master Volume"],
                                                                     # cue_volume=self.buttons["Cue Volume"]
+                                                                    fixed_length_rec_1bars=self.buttons["⦷ Fixed Length Rec 1 Bars"],
+                                                                    fixed_length_rec_2bars=self.buttons["⦷ Fixed Length Rec 2 Bars"],
+                                                                    fixed_length_rec_4bars=self.buttons["⦷ Fixed Length Rec 4 Bars"],
+                                                                    fixed_length_rec_8bars=self.buttons["⦷ Fixed Length Rec 8 Bars"],
                                                                     ))
 
 
@@ -385,7 +393,7 @@ class opencontrol(ControlSurface):
                                                                     sel_next_looper=self.buttons["⧁ Next Looper"],
                                                                     arm_looper_track=self.buttons[ "⌻ Arm Looper Track"],
                                                                     mute_looper_track=self.buttons["⌧ Mute Looper Track"],
-                                                                    select_looper=self.buttons["⌸ Show Looper"],
+                                                                    show_looper=self.buttons["⌸ Show Looper"],
                                                                     looper_state=self.buttons["◈ Looper State"],
                                                                     stop_looper=self.buttons["▣ Stop Looper"],
                                                                     clear_all=self.buttons["∅ Clear All"],

@@ -135,6 +135,42 @@ class SessionComponent(SessionBase):
         self._add_MIDI_track_button = button
         self._add_MIDI_track_value.subject = button
 
+    def set_fixed_length_rec_1bars(self, button):
+        self._fixed_length_rec_1bars_button = button
+        self._fixed_length_rec_1bars_value.subject = button
+
+    def set_fixed_length_rec_2bars(self, button):
+        self._fixed_length_rec_2bars_button = button
+        self._fixed_length_rec_2bars_value.subject = button
+
+    def set_fixed_length_rec_4bars(self, button):
+        self._fixed_length_rec_4bars_button = button
+        self._fixed_length_rec_4bars_value.subject = button
+
+    def set_fixed_length_rec_8bars(self, button):
+        self._fixed_length_rec_8bars_button = button
+        self._fixed_length_rec_8bars_value.subject = button
+
+    @subject_slot('value')
+    def _fixed_length_rec_1bars_value(self, value):
+        if value:
+            self.song().trigger_session_record(4)
+
+    @subject_slot('value')
+    def _fixed_length_rec_2bars_value(self, value):
+        if value:
+            self.song().trigger_session_record(8)
+
+    @subject_slot('value')
+    def _fixed_length_rec_4bars_value(self, value):
+        if value:
+            self.song().trigger_session_record(16)
+
+    @subject_slot('value')
+    def _fixed_length_rec_8bars_value(self, value):
+        if value:
+            self.song().trigger_session_record(32)
+
     def set_last_selected_parameter(self, button):
         self._last_selected_parameter_button = button
         self._last_selected_parameter_value.subject = button

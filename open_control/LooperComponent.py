@@ -140,15 +140,16 @@ class LooperComponent(DeviceBase):
         self._color_buttons[1] = button
         self.sel_next_looper_button_value.subject = button
 
-    def set_select_looper(self, button):
-        self.select_looper_button = button
-        self.select_looper_button_value.subject = button
+    def set_show_looper(self, button):
+        self.show_looper_button = button
+        self.show_looper_button_value.subject = button
 
     @subject_slot('value')
-    def select_looper_button_value(self, value):
+    def show_looper_button_value(self, value):
         if value:
             self.application().view.focus_view("Detail/DeviceChain")
             self.song().view.select_device(self.looper_list[self._active_looper_number])
+            self.song().view.selected_track = self.looper_list[self._active_looper_number].canonical_parent
 
     @subject_slot('value')
     def sel_next_looper_button_value(self, value):
@@ -172,6 +173,7 @@ class LooperComponent(DeviceBase):
         return can_parent
 
     def _looper_selected_changed(self):
+        print(["looper", self._active_looper_number])
         if self._active_looper_number > 0:
             self._change_looper_buttons(self._active_looper_number)
             self.looper_state_changed()
@@ -341,6 +343,7 @@ class LooperComponent(DeviceBase):
         super(LooperComponent, self).disconnect()
 
     def update(self):
+        print("update")
         super(LooperComponent, self).update()
         self._looper_selected_changed()
         self._send_sysex_for_name("L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))
