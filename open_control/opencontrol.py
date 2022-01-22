@@ -232,6 +232,7 @@ class opencontrol(ControlSurface):
         self.previous_quarter = 0
         self.quarter_lock = False
         self._skin = make_default_skin()
+        self.linked_page = {"Session": 0, "Arranger": 2, "Browser": 0}
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
@@ -246,6 +247,7 @@ class opencontrol(ControlSurface):
             self._device.set_mixer(self._mixer)
             self.song().add_current_song_time_listener(self.on_time_change)
             self.song().add_is_playing_listener(self.on_is_playing_change)
+            self.application().view.add_focused_document_view_listener(self.on_view_changed)
             # self.set_device_component(self._looper)
             self.check_session_box()
             if Live.Application.get_application().get_major_version() == 9:
@@ -253,6 +255,13 @@ class opencontrol(ControlSurface):
 
         self.log_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
+
+    def on_view_changed(self):
+        linked_page = self.linked_page[self.application().view.focused_document_view]
+        if linked_page is not self.current_page:
+            self.current_page = linked_page
+            self.enable_page()
+
 
     def _create_buttons(self):
         """ Create all the buttons one by one then buils the button matrixes if needed"""
@@ -480,11 +489,9 @@ class opencontrol(ControlSurface):
             self.enable_page()
     
     def enable_page(self):
-        pages_color = [Options.page_1_color, Options.page_2_color, Options.page_3_color]
         self.show_message('Page %s' % str(self.current_page+1))
         self._send_midi((240, 122, 29, 247))
         self._send_midi((240, 122, 29, 1, 19, 40, self.current_page, 247))
-        # self._send_midi(prefix + (50, self.current_page, 247))
         if self.current_page == 2:
             self._pages_0_2.selected_mode = self.pages[2]
             self._pages_0_1.set_enabled(False)
@@ -493,7 +500,6 @@ class opencontrol(ControlSurface):
             self._pages_0_1.selected_mode = self.pages[self.current_page]
             self._pages_0_2.set_enabled(False)
             self._pages_0_1.set_enabled(True)
-        self._send_midi((176 + MIDI_CHANNEL, 58, pages_color[self.current_page]))
         self.update_pages()
 
     def update_pages(self):
@@ -532,12 +538,14 @@ class opencontrol(ControlSurface):
             if midi_bytes[6] == 1:
                 Options.session_box_linked_to_selection = midi_bytes[7]
                 self.check_session_box()
-        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 32):
-        #     Options.page_1_color = midi_bytes[6]
-        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 33):
-        #     Options.page_3_color = midi_bytes[6]
-        # if midi_bytes[0:6] == (240, 122, 29, 1, 19, 34):
-        #     Options.page_3_color = midi_bytes[6]
+        if midi_bytes[0:6] == (240, 122, 29, 1, 19, 24):
+            print([midi_bytes[6], midi_bytes[7]])
+            if midi_bytes[7] == 1:
+                self.linked_page["Session"] = midi_bytes[6]
+            if midi_bytes[7] == 2:
+                self.linked_page["Arranger"] = midi_bytes[6]
+            if midi_bytes[7] == 3:
+                self.linked_page["Browser"] = midi_bytes[6]
 
     def check_session_box(self):
         self._session._show_highlight = False
