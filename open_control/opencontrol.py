@@ -174,7 +174,8 @@ led_actions = {
     "⍇ Prev Setlist Song": 33,
     "⍈ Next Setlist Song": 34,
     "▷ Launch Setlist Song": 44,
-    "▷ Refresh Setlist": 45,
+    "▷ Refresh Setlist": 46,
+    "▷ Launch Setlist Song NoQ": 45,
     "--- Looper ---": 0,
     "⧀ Prev Looper Track Color": 48,
     "⧁ Next Looper Track Color": 49,
@@ -344,6 +345,7 @@ class opencontrol(ControlSurface):
                                                                     prev_setlist_song=self.buttons[ "⍇ Prev Setlist Song"],
                                                                     next_setlist_song=self.buttons["⍈ Next Setlist Song"],
                                                                     launch_setlist_song=self.buttons["▷ Launch Setlist Song"],
+                                                                    launch_setlist_song_noq=self.buttons["▷ Launch Setlist Song NoQ"],
                                                                     refresh_setlist=self.buttons["▷ Refresh Setlist"]
                                                                     ))
 
