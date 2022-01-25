@@ -45,7 +45,7 @@ from . import Options
 MIDI_CHANNEL = 15
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.0'
+SCRIPT_VER = 'v1.1'
 MAX_REQUESTS = 10
 prefix = (240, 122, 29, 1, 19)
 REQUEST_MSG = (240, 122, 29, 1, 19, 2, 247)
