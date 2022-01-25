@@ -481,7 +481,6 @@ class TransportComponent(TransportBase):
                 #     self.selected_cue.jump()
                 # break
         if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
-            self._print(["SEL CUE", self.selected_cue.name])
             self._send_sysex_for_name(self.selected_cue.name)
             if self.prev_cue:
                 self.prev_cue.remove_name_listener(self._on_name_changed)

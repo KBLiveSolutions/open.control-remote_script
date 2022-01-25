@@ -93,9 +93,6 @@ class ChannelStripComponent(ChannelStripBase):
             if value is not 0 or not self._trigger_session_record_button.is_momentary():
                 self.song().trigger_session_record()
 
-
-
-
     def update(self):
         super(ChannelStripComponent, self).update()
         self._on_track_name_changed()

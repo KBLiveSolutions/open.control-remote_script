@@ -45,7 +45,7 @@ from . import Options
 MIDI_CHANNEL = 15
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.0'
+SCRIPT_VER = 'v1.2'
 MAX_REQUESTS = 10
 prefix = (240, 122, 29, 1, 19)
 REQUEST_MSG = (240, 122, 29, 1, 19, 2, 247)
@@ -170,6 +170,11 @@ led_actions = {
     "S Solo": 25,
     "⌻ Arm": 26,
     "■ Stop": 27,
+    "--- Setlist ---": 0,
+    "⍇ Prev Setlist Song": 33,
+    "⍈ Next Setlist Song": 34,
+    "▷ Launch Setlist Song": 44,
+    "▷ Refresh Setlist": 45,
     "--- Looper ---": 0,
     "⧀ Prev Looper Track Color": 48,
     "⧁ Next Looper Track Color": 49,
@@ -336,6 +341,10 @@ class opencontrol(ControlSurface):
                                                                     fixed_length_rec_2bars=self.buttons["⦷ Fixed Length Rec 2 Bars"],
                                                                     fixed_length_rec_4bars=self.buttons["⦷ Fixed Length Rec 4 Bars"],
                                                                     fixed_length_rec_8bars=self.buttons["⦷ Fixed Length Rec 8 Bars"],
+                                                                    prev_setlist_song=self.buttons[ "⍇ Prev Setlist Song"],
+                                                                    next_setlist_song=self.buttons["⍈ Next Setlist Song"],
+                                                                    launch_setlist_song=self.buttons["▷ Launch Setlist Song"],
+                                                                    refresh_setlist=self.buttons["▷ Refresh Setlist"]
                                                                     ))
 
 
