@@ -104,6 +104,12 @@ button_actions = {
     "⇴ Capture and Insert Scene": 43,
     "⧈ Stop All Clips": 3,
     "➟ Disable Follow Actions": 12,
+    "--- Setlist ---": 0,
+    "⍇ Prev Setlist Song": 33,
+    "⍈ Next Setlist Song": 34,
+    "▷ Launch Setlist Song": 44,
+    "▷ Refresh Setlist": 46,
+    "▷ Launch Setlist Song NoQ": 45,
     "--- Tracks ---": 0,
     "← Sel Prev Track": 18,
     "→ Sel Next Track": 19,
@@ -170,12 +176,6 @@ led_actions = {
     "S Solo": 25,
     "⌻ Arm": 26,
     "■ Stop": 27,
-    "--- Setlist ---": 0,
-    "⍇ Prev Setlist Song": 33,
-    "⍈ Next Setlist Song": 34,
-    "▷ Launch Setlist Song": 44,
-    "▷ Refresh Setlist": 46,
-    "▷ Launch Setlist Song NoQ": 45,
     "--- Looper ---": 0,
     "⧀ Prev Looper Track Color": 48,
     "⧁ Next Looper Track Color": 49,
@@ -238,7 +238,7 @@ class opencontrol(ControlSurface):
         self.previous_quarter = 0
         self.quarter_lock = False
         self._skin = make_default_skin()
-        self.linked_page = {"Session": 0, "Arranger": 2, "Browser": 0}
+        self.linked_page = {0: "None", 1: "None", 2: "None"}
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
@@ -246,6 +246,7 @@ class opencontrol(ControlSurface):
             self._mixer = MixerComponent(num_tracks=NUM_TRACKS)
             self._session.set_mixer(self._mixer)
             self._transport = TransportComponent()
+            self._transport.set_session(self._session)
             self._device = DeviceComponent(device_selection_follows_track_selection=True)
             self._looper = LooperComponent(device_selection_follows_track_selection=False)
             self._create_pages()
@@ -263,10 +264,10 @@ class opencontrol(ControlSurface):
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
 
     def on_view_changed(self):
-        linked_page = self.linked_page[self.application().view.focused_document_view]
-        if linked_page is not self.current_page:
-            self.current_page = linked_page
-            self.enable_page()
+        for page in self.linked_page:
+            if self.linked_page[page] == self.application().view.focused_document_view and  self.current_page != page:
+                self.current_page = page
+                self.enable_page()
 
 
     def _create_buttons(self):
@@ -351,7 +352,7 @@ class opencontrol(ControlSurface):
 
 
 
-        self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
+        # self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
 
         """Transport Actions"""
         self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["■/▶ Start/Stop"],
@@ -429,7 +430,7 @@ class opencontrol(ControlSurface):
 
         """Modes switching"""
         self.pages = ['page_0', 'page_1', 'page_2']
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._scene_layer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
         self._pages_0_1.add_mode(self.pages[0], active_layers)
         self._pages_0_1.add_mode(self.pages[1], active_layers, behaviour=CancellableBehaviour())
         self._page_2 = AddLayerMode(self._pages_0_1, self._pages_0_1.layer)
@@ -530,7 +531,7 @@ class opencontrol(ControlSurface):
             self.schedule_message(1, self.refresh_state)
         """ If Handshake successful, call the update function for each Layout"""
         if midi_bytes == ACKNOWLEDGMENT_MSG:
-            self._session.scene(0)._on_scene_name_changed()
+            # self._session.scene(0)._on_scene_name_changed()
             self._mixer.channel_strip(0)._on_track_name_changed()
             # self._device._on_device_name_changed()
             self._transport._on_name_changed()
@@ -550,13 +551,10 @@ class opencontrol(ControlSurface):
                 Options.session_box_linked_to_selection = midi_bytes[7]
                 self.check_session_box()
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 24):
-            print([midi_bytes[6], midi_bytes[7]])
-            if midi_bytes[7] == 1:
-                self.linked_page["Session"] = midi_bytes[6]
-            if midi_bytes[7] == 2:
-                self.linked_page["Arranger"] = midi_bytes[6]
-            if midi_bytes[7] == 3:
-                self.linked_page["Browser"] = midi_bytes[6]
+            pages = {0: "None", 1: "Session", 2: "Arranger", 3: "Browser"}
+            rcvd = midi_bytes[6]
+            print([pages[midi_bytes[7]], rcvd])
+            self.linked_page[rcvd] = pages[midi_bytes[7]]
 
     def check_session_box(self):
         self._session._show_highlight = False
