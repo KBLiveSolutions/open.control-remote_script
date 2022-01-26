@@ -232,7 +232,7 @@ class opencontrol(ControlSurface):
         self.previous_quarter = 0
         self.quarter_lock = False
         self._skin = make_default_skin()
-        self.linked_page = {"Session": 0, "Arranger": 2, "Browser": 0}
+        self.linked_page = {0: "None", 1: "None", 2: "None"}
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
