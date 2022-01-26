@@ -553,7 +553,6 @@ class opencontrol(ControlSurface):
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 24):
             pages = {0: "None", 1: "Session", 2: "Arranger", 3: "Browser"}
             rcvd = midi_bytes[6]
-            print([pages[midi_bytes[7]], rcvd])
             self.linked_page[rcvd] = pages[midi_bytes[7]]
 
     def check_session_box(self):
