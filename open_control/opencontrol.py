@@ -257,10 +257,10 @@ class opencontrol(ControlSurface):
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
 
     def on_view_changed(self):
-        linked_page = self.linked_page[self.application().view.focused_document_view]
-        if linked_page is not self.current_page:
-            self.current_page = linked_page
-            self.enable_page()
+        for page in self.linked_page:
+            if self.linked_page[page] == self.application().view.focused_document_view and  self.current_page != page:
+                self.current_page = page
+                self.enable_page()
 
 
     def _create_buttons(self):
