@@ -539,13 +539,9 @@ class opencontrol(ControlSurface):
                 Options.session_box_linked_to_selection = midi_bytes[7]
                 self.check_session_box()
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 24):
-            print([midi_bytes[6], midi_bytes[7]])
-            if midi_bytes[7] == 1:
-                self.linked_page["Session"] = midi_bytes[6]
-            if midi_bytes[7] == 2:
-                self.linked_page["Arranger"] = midi_bytes[6]
-            if midi_bytes[7] == 3:
-                self.linked_page["Browser"] = midi_bytes[6]
+            pages = {0: "None", 1: "Session", 2: "Arranger", 3: "Browser"}
+            rcvd = midi_bytes[6]
+            self.linked_page[rcvd] = pages[midi_bytes[7]]
 
     def check_session_box(self):
         self._session._show_highlight = False
