@@ -570,10 +570,13 @@ class SessionComponent(SessionBase):
                 number = self.find_song_in_name(cue)
                 if number > -1 and number not in self.setlist:
                     self.setlist[number] = cue
-            if self.selected_setlist_song is None:
-                self.selected_setlist_song = self.sorted_setlist_keys[0]
-            self.show_song_name()
-            self._on_setlist_song_color_changed()
+            if len(self.sorted_setlist_keys) > 0:
+                if self.selected_setlist_song is None:
+                    self.selected_setlist_song = self.sorted_setlist_keys[0]
+                self.show_song_name()
+                self._on_setlist_song_color_changed()
+            else:
+                self.send_sysex_for_name(5, "Add Songs")
 
     def find_song_in_name(self, item):
         number = -1

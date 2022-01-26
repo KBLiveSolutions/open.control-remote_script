@@ -20,19 +20,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import Live  #
-from functools import partial
-import time
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
-from _Framework.Dependency import depends, inject
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import const, mixin, recursive_map
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ModesComponent import ModesComponent, CompoundMode, LayerMode, AddLayerMode, ImmediateBehaviour, CancellableBehaviour, AlternativeBehaviour
+from _Framework.ModesComponent import ModesComponent, AddLayerMode, CancellableBehaviour
 
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonElement import ButtonElement
-from _Framework.EncoderElement import EncoderElement
 
 from .SpecialSessionComponent import SessionComponent
 from .SpecialMixerComponent import MixerComponent
@@ -347,13 +342,13 @@ display_actions =  {"Scene Name": 80,
 #     "--- Looper ---": 0,
 #     "⧀ Prev Looper Track Color": 48,
 #     "⧁ Next Looper Track Color": 49,
-#     "◈ Looper State": 53,
-#     "◈ State (LOOPER1)": 77,
-#     "◈ State (LOOPER2)": 78,
-#     "◈ State (LOOPER3)": 79,
-#     "◈ State (LOOPER4)": 80,
-#     "◈ State (LOOPER5)": 81,
-#     "◈ State (LOOPER6)": 82,
+#     "Looper State": 53,
+#     "State (LOOPER1)": 77,
+#     "State (LOOPER2)": 78,
+#     "State (LOOPER3)": 79,
+#     "State (LOOPER4)": 80,
+#     "State (LOOPER5)": 81,
+#     "State (LOOPER6)": 82,
 #     "--- Pages ---": 0,
 #     "⇆ Page Color": 58,
 #   }
@@ -458,14 +453,14 @@ class opencontrol(ControlSurface):
         clip_launch_row = []
 
         for i in range(NUM_TRACKS):
-            mute_row.append(self.buttons["⌧ Mute"])
-            arm_row.append(self.buttons["⌻ Arm"])
-            stop_row.append(self.buttons["■ Stop"])
+            mute_row.append(self.buttons["Mute"])
+            arm_row.append(self.buttons["Arm"])
+            stop_row.append(self.buttons["Stop"])
             solo_row.append(self.buttons["S Solo"])
             clip_launch_row.append(self.buttons["Launch Clip"])
                     
-        self.looper_buttons = ButtonMatrixElement(rows=[[self.buttons["◈ State (LOOPER1)"], self.buttons["◈ State (LOOPER2)"], self.buttons["◈ State (LOOPER3)"],
-                                                self.buttons["◈ State (LOOPER4)"], self.buttons["◈ State (LOOPER5)"], self.buttons["◈ State (LOOPER6)"]]])
+        self.looper_buttons = ButtonMatrixElement(rows=[[self.buttons["State (LOOPER1)"], self.buttons["State (LOOPER2)"], self.buttons["State (LOOPER3)"],
+                                                self.buttons["State (LOOPER4)"], self.buttons["State (LOOPER5)"], self.buttons["State (LOOPER6)"]]])
         self.mute_buttons = ButtonMatrixElement(rows=[mute_row])
         self.arm_buttons = ButtonMatrixElement(rows=[arm_row])
         self.stop_buttons = ButtonMatrixElement(rows=[stop_row])
@@ -479,76 +474,74 @@ class opencontrol(ControlSurface):
         """ Create all the pages and Layers"""
         self._pages_0_1 = ModesComponent(name='pages_0_1', is_enabled=False)
         self._pages_0_2 = ModesComponent(name='pages_0_2', is_enabled=False)
+
+
         """Session Actions"""
-        self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["⬆ Sel Prev Scene"],
-                                                                    scene_bank_down_button=self.buttons["⬇ Sel Next Scene"],
-                                                                    scene_bank_up_x4_button=self.buttons["⬆+4 Jump 4 Scenes Up"],
-                                                                    scene_bank_down_x4_button=self.buttons["⬇-4 Jump 4 Scenes Down"],
+        self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["Sel Prev Scene"],
+                                                                    scene_bank_down_button=self.buttons["Sel Next Scene"],
+                                                                    scene_bank_up_x4_button=self.buttons["Jump 4 Scenes Up"],
+                                                                    scene_bank_down_x4_button=self.buttons["Jump 4 Scenes Down"],
                                                                     # scene_launch_buttons=self.scene_launch_buttons,
-                                                                    launch_scene_button=self.buttons["▶ Launch Scene"],
-                                                                    track_bank_left_button=self.buttons["← Sel Prev Track"],
-                                                                    track_bank_right_button=self.buttons["→ Sel Next Track"],
-                                                                    find_next_empty_slot=self.buttons["↳ Find Empty Slot"],
-                                                                    jump_to_playing_scene=self.buttons["⥴ Jump to Playing Scene"],
-                                                                    add_audio_track=self.buttons["☆ Add Audio Track"],
-                                                                    add_MIDI_track=self.buttons["✬ Add MIDI Track"],
-                                                                    insert_scene=self.buttons[ "⥅ Insert Scene"],
-                                                                    capture_and_insert_scene=self.buttons[ "⇴ Capture and Insert Scene"],
-                                                                    undo=self.buttons["⤶ Undo"],
-                                                                    redo=self.buttons["⤷ Redo"],
-                                                                    current_track_color=self.buttons["✽ Current Track Color"],
+                                                                    launch_scene_button=self.buttons["Launch Scene"],
+                                                                    track_bank_left_button=self.buttons["Sel Prev Track"],
+                                                                    track_bank_right_button=self.buttons["Sel Next Track"],
+                                                                    find_next_empty_slot=self.buttons["Find Empty Slot"],
+                                                                    jump_to_playing_scene=self.buttons["Jump to Playing Scene"],
+                                                                    add_audio_track=self.buttons["Add Audio Track"],
+                                                                    add_MIDI_track=self.buttons["Add MIDI Track"],
+                                                                    insert_scene=self.buttons[ "Insert Scene"],
+                                                                    capture_and_insert_scene=self.buttons[ "Capture and Insert Scene"],
+                                                                    undo=self.buttons["Undo"],
+                                                                    redo=self.buttons["Redo"],
+                                                                    current_track_color=self.buttons["Current Track Color"],
                                                                     unfold_track=self.buttons["U Fold/Unfold Track"],
-                                                                    stop_all_clips_button=self.buttons["⧈ Stop All Clips"],
+                                                                    stop_all_clips_button=self.buttons["Stop All Clips"],
                                                                     stop_track_clip_buttons=self.stop_buttons,
                                                                     clip_launch_buttons=self.clip_launch_buttons,
                                                                     last_selected_parameter=self.buttons["Last Selected Parameter"],
-                                                                    main_view_toggle=self.buttons["⮂ Arrangement/Session Toggle"],
+                                                                    main_view_toggle=self.buttons["Arrangement/Session Toggle"],
                                                                     scroll_scenes=self.buttons["Scroll Scenes"],
                                                                     detail_view_toggle=self.buttons["Clip/Device Toggle"],
                                                                     # master_volume=self.buttons["Master Volume"],
                                                                     # cue_volume=self.buttons["Cue Volume"]
-                                                                    fixed_length_rec_1bars=self.buttons["⦷ Fixed Length Rec 1 Bars"],
-                                                                    fixed_length_rec_2bars=self.buttons["⦷ Fixed Length Rec 2 Bars"],
-                                                                    fixed_length_rec_4bars=self.buttons["⦷ Fixed Length Rec 4 Bars"],
-                                                                    fixed_length_rec_8bars=self.buttons["⦷ Fixed Length Rec 8 Bars"],
+                                                                    fixed_length_rec_1bars=self.buttons["Fixed Length Rec 1 Bars"],
+                                                                    fixed_length_rec_2bars=self.buttons["Fixed Length Rec 2 Bars"],
+                                                                    fixed_length_rec_4bars=self.buttons["Fixed Length Rec 4 Bars"],
+                                                                    fixed_length_rec_8bars=self.buttons["Fixed Length Rec 8 Bars"],
                                                                     prev_setlist_song=self.buttons[ "Prev Setlist Song"],
-                                                                    next_setlist_song=self.buttons["⍈ Next Setlist Song"],
+                                                                    next_setlist_song=self.buttons["Next Setlist Song"],
                                                                     launch_setlist_song=self.buttons["Launch Setlist Song"],
                                                                     launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
                                                                     refresh_setlist=self.buttons["Refresh Setlist"]
                                                                     ))
 
-
-
-        # self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
-
         """Transport Actions"""
-        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["■/▶ Start/Stop"],
-                                                                    loop_button=self.buttons["⥁ Arrangement Loop"],
-                                                                    capture=self.buttons["▢ Capture"],
-                                                                    continue_playing=self.buttons["❚▶ Continue Playing"],
+        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["Start/Stop"],
+                                                                    loop_button=self.buttons["Arrangement Loop"],
+                                                                    capture=self.buttons["Capture"],
+                                                                    continue_playing=self.buttons["Continue Playing"],
                                                                     loop_position=self.buttons["Loop Position"],
                                                                     loop_length=self.buttons["Loop Length"],
                                                                     name_controls=self.buttons["Left Marker Name"],
-                                                                    jump_to_start=self.buttons["↞ Jump to 1.1.1"],
-                                                                    restart_button=self.buttons["⇉ Restart From Last Position"],
-                                                                    set_or_delete_cue_button=self.buttons["⤓ Add/Delete Marker"],
-                                                                    inc_bpm_button=self.buttons["⊕ BPM +1"],
-                                                                    dec_bpm_button=self.buttons["⊖ BPM -1"],
+                                                                    jump_to_start=self.buttons["Jump to 1.1.1"],
+                                                                    restart_button=self.buttons["Restart From Last Position"],
+                                                                    set_or_delete_cue_button=self.buttons["Add/Delete Marker"],
+                                                                    inc_bpm_button=self.buttons["BPM +1"],
+                                                                    dec_bpm_button=self.buttons["BPM -1"],
                                                                     inc_dec_bpm_button=self.buttons["BPM +/- 1"],
                                                                     punch_in_button=self.buttons["Punch In"],
                                                                     punch_out_button=self.buttons["Punch Out"],
                                                                     h_zoom=self.buttons["Horizontal Zoom"],
-                                                                    back_to_arrangement_button=self.buttons["⇶ Back To Arrangement"],
-                                                                    midi_recording_quantization_button=self.buttons["ℚ MIDI Recording Quantization"],
+                                                                    back_to_arrangement_button=self.buttons["Back To Arrangement"],
+                                                                    midi_recording_quantization_button=self.buttons["MIDI Recording Quantization"],
                                                                     re_enable_automation_button=self.buttons["Re-enable Automation"],
-                                                                    prev_cue_button=self.buttons["⇤ Go to Prev Marker"],
-                                                                    next_cue_button=self.buttons["⇥ Go to Next Marker"],
+                                                                    prev_cue_button=self.buttons["Go to Prev Marker"],
+                                                                    next_cue_button=self.buttons["Go to Next Marker"],
                                                                     prev_next_cue_button=self.buttons["Jump to Next/Prev Marker"],
-                                                                    marker_loop_button=self.buttons["⥀ Loop to Next Marker"],
-                                                                    metronome=self.buttons["●○ Metronome"],
-                                                                    record_button=self.buttons["● Arrangement Rec"],
-                                                                    session_record_button=self.buttons["○ Session Rec"],
+                                                                    marker_loop_button=self.buttons["Loop to Next Marker"],
+                                                                    metronome=self.buttons["Metronome"],
+                                                                    record_button=self.buttons["Arrangement Rec"],
+                                                                    session_record_button=self.buttons["Session Rec"],
                                                                     skip=self.buttons["Skip Fwd/Bckwd"],
                                                                     groove_amount=self.buttons["Global Groove Amount"]
                                                                     ))
@@ -564,28 +557,28 @@ class opencontrol(ControlSurface):
                                                             ))
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
-                                                                    launch_variation_button=self.buttons["▹ Launch Variation"],
-                                                                    prev_variation_button=self.buttons["⌃ Prev Variation"],
-                                                                    next_variation_button=self.buttons["⌵ Next Variation"],
-                                                                    next_device_button=self.buttons["⍈ Next Device"],
+                                                                    launch_variation_button=self.buttons["Launch Variation"],
+                                                                    prev_variation_button=self.buttons["Prev Variation"],
+                                                                    next_variation_button=self.buttons["Next Variation"],
+                                                                    next_device_button=self.buttons["Next Device"],
                                                                     prev_device_button=self.buttons["Prev Device"],
-                                                                    store_variation_button=self.buttons["◦ Store Variation"],
-                                                                    recall_variation_button=self.buttons["↩︎ Recall Last Used"],
-                                                                    randomize_macros_button=self.buttons["⌁ Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["① Parameter 1"], self.buttons["② Parameter 2"], self.buttons["③ Parameter 3"], self.buttons["④ Parameter 4"]]]),
+                                                                    store_variation_button=self.buttons["Store Variation"],
+                                                                    recall_variation_button=self.buttons["Recall Last Used"],
+                                                                    randomize_macros_button=self.buttons["Randomize Macros"],
+                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
                                                                     priority=1))
 
         """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
                                                                     add_looper = self.buttons["+ Add Looper"],
-                                                                    sel_prev_looper=self.buttons["⧀ Prev Looper"],
-                                                                    sel_next_looper=self.buttons["⧁ Next Looper"],
-                                                                    arm_looper_track=self.buttons[ "⌻ Arm Looper Track"],
-                                                                    mute_looper_track=self.buttons["⌧ Mute Looper Track"],
-                                                                    show_looper=self.buttons["⌸ Show Looper"],
-                                                                    looper_state=self.buttons["◈ Looper State"],
-                                                                    stop_looper=self.buttons["▣ Stop Looper"],
-                                                                    clear_all=self.buttons["∅ Clear All"],
+                                                                    sel_prev_looper=self.buttons["Prev Looper"],
+                                                                    sel_next_looper=self.buttons["Next Looper"],
+                                                                    arm_looper_track=self.buttons[ "Arm Looper Track"],
+                                                                    mute_looper_track=self.buttons["Mute Looper Track"],
+                                                                    show_looper=self.buttons["Show Looper"],
+                                                                    looper_state=self.buttons["Looper State"],
+                                                                    stop_looper=self.buttons["Stop Looper"],
+                                                                    clear_all=self.buttons["Clear All"],
                                                                     looper_buttons=self.looper_buttons
                                                                     ))
 
@@ -606,15 +599,153 @@ class opencontrol(ControlSurface):
         self._pages_0_2.add_mode(self.pages[2], active_layers, behaviour=CancellableBehaviour())
         self.current_page = 0
         self.previous_page_0_1 = 0
-        self.set_page_0_1_button(self.buttons["⇆ Page 1/2"])
-        self.set_page_0_2_button(self.buttons["⇆ Page 1/3"])
-        self.set_prev_page_button(self.buttons["↩ Prev Page"])
-        self.set_next_page_button(self.buttons["↪ Next Page"])
+        self.set_page_0_1_button(self.buttons["Page 1/2"])
+        self.set_page_0_2_button(self.buttons["Page 1/3"])
+        self.set_prev_page_button(self.buttons["Prev Page"])
+        self.set_next_page_button(self.buttons["Next Page"])
         # self.page_color_button = self.make_button(58, MIDI_CHANNEL, msg_type=MIDI_CC_TYPE)
         self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
         self._pages_0_1.selected_mode = self.pages[0]
         self._pages_0_2.set_enabled(False)
         self._pages_0_1.set_enabled(True)
+
+
+        # """Session Actions"""
+        # self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["⬆ Sel Prev Scene"],
+        #                                                             scene_bank_down_button=self.buttons["⬇ Sel Next Scene"],
+        #                                                             scene_bank_up_x4_button=self.buttons["⬆+4 Jump 4 Scenes Up"],
+        #                                                             scene_bank_down_x4_button=self.buttons["⬇-4 Jump 4 Scenes Down"],
+        #                                                             # scene_launch_buttons=self.scene_launch_buttons,
+        #                                                             launch_scene_button=self.buttons["▶ Launch Scene"],
+        #                                                             track_bank_left_button=self.buttons["← Sel Prev Track"],
+        #                                                             track_bank_right_button=self.buttons["→ Sel Next Track"],
+        #                                                             find_next_empty_slot=self.buttons["↳ Find Empty Slot"],
+        #                                                             jump_to_playing_scene=self.buttons["⥴ Jump to Playing Scene"],
+        #                                                             add_audio_track=self.buttons["☆ Add Audio Track"],
+        #                                                             add_MIDI_track=self.buttons["✬ Add MIDI Track"],
+        #                                                             insert_scene=self.buttons[ "⥅ Insert Scene"],
+        #                                                             capture_and_insert_scene=self.buttons[ "⇴ Capture and Insert Scene"],
+        #                                                             undo=self.buttons["⤶ Undo"],
+        #                                                             redo=self.buttons["⤷ Redo"],
+        #                                                             current_track_color=self.buttons["✽ Current Track Color"],
+        #                                                             unfold_track=self.buttons["U Fold/Unfold Track"],
+        #                                                             stop_all_clips_button=self.buttons["⧈ Stop All Clips"],
+        #                                                             stop_track_clip_buttons=self.stop_buttons,
+        #                                                             clip_launch_buttons=self.clip_launch_buttons,
+        #                                                             last_selected_parameter=self.buttons["Last Selected Parameter"],
+        #                                                             main_view_toggle=self.buttons["⮂ Arrangement/Session Toggle"],
+        #                                                             scroll_scenes=self.buttons["Scroll Scenes"],
+        #                                                             detail_view_toggle=self.buttons["Clip/Device Toggle"],
+        #                                                             # master_volume=self.buttons["Master Volume"],
+        #                                                             # cue_volume=self.buttons["Cue Volume"]
+        #                                                             fixed_length_rec_1bars=self.buttons["⦷ Fixed Length Rec 1 Bars"],
+        #                                                             fixed_length_rec_2bars=self.buttons["⦷ Fixed Length Rec 2 Bars"],
+        #                                                             fixed_length_rec_4bars=self.buttons["⦷ Fixed Length Rec 4 Bars"],
+        #                                                             fixed_length_rec_8bars=self.buttons["⦷ Fixed Length Rec 8 Bars"],
+        #                                                             prev_setlist_song=self.buttons[ "Prev Setlist Song"],
+        #                                                             next_setlist_song=self.buttons["⍈ Next Setlist Song"],
+        #                                                             launch_setlist_song=self.buttons["Launch Setlist Song"],
+        #                                                             launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
+        #                                                             refresh_setlist=self.buttons["Refresh Setlist"]
+        #                                                             ))
+
+
+
+        # # self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
+
+        # """Transport Actions"""
+        # self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["■/▶ Start/Stop"],
+        #                                                             loop_button=self.buttons["⥁ Arrangement Loop"],
+        #                                                             capture=self.buttons["▢ Capture"],
+        #                                                             continue_playing=self.buttons["❚▶ Continue Playing"],
+        #                                                             loop_position=self.buttons["Loop Position"],
+        #                                                             loop_length=self.buttons["Loop Length"],
+        #                                                             name_controls=self.buttons["Left Marker Name"],
+        #                                                             jump_to_start=self.buttons["↞ Jump to 1.1.1"],
+        #                                                             restart_button=self.buttons["⇉ Restart From Last Position"],
+        #                                                             set_or_delete_cue_button=self.buttons["⤓ Add/Delete Marker"],
+        #                                                             inc_bpm_button=self.buttons["⊕ BPM +1"],
+        #                                                             dec_bpm_button=self.buttons["⊖ BPM -1"],
+        #                                                             inc_dec_bpm_button=self.buttons["BPM +/- 1"],
+        #                                                             punch_in_button=self.buttons["Punch In"],
+        #                                                             punch_out_button=self.buttons["Punch Out"],
+        #                                                             h_zoom=self.buttons["Horizontal Zoom"],
+        #                                                             back_to_arrangement_button=self.buttons["⇶ Back To Arrangement"],
+        #                                                             midi_recording_quantization_button=self.buttons["ℚ MIDI Recording Quantization"],
+        #                                                             re_enable_automation_button=self.buttons["Re-enable Automation"],
+        #                                                             prev_cue_button=self.buttons["⇤ Go to Prev Marker"],
+        #                                                             next_cue_button=self.buttons["⇥ Go to Next Marker"],
+        #                                                             prev_next_cue_button=self.buttons["Jump to Next/Prev Marker"],
+        #                                                             marker_loop_button=self.buttons["⥀ Loop to Next Marker"],
+        #                                                             metronome=self.buttons["●○ Metronome"],
+        #                                                             record_button=self.buttons["● Arrangement Rec"],
+        #                                                             session_record_button=self.buttons["○ Session Rec"],
+        #                                                             skip=self.buttons["Skip Fwd/Bckwd"],
+        #                                                             groove_amount=self.buttons["Global Groove Amount"]
+        #                                                             ))
+        # """Mixer Actions"""
+        # self._mixer_mode = AddLayerMode(self._mixer, Layer(mute_buttons=self.mute_buttons,
+        #                                                     arm_buttons=self.arm_buttons,
+        #                                                     solo_buttons=self.solo_buttons,
+        #                                                     prehear_volume_control=self.buttons["Cue Volume"],
+        #                                                     master_volume=self.buttons["Master Volume"],
+        #                                                     volume=self.buttons["Volume"],
+        #                                                     pan=self.buttons["Pan"],
+        #                                                     send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
+        #                                                     ))
+        # """Devices Actions"""
+        # self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
+        #                                                             launch_variation_button=self.buttons["▹ Launch Variation"],
+        #                                                             prev_variation_button=self.buttons["⌃ Prev Variation"],
+        #                                                             next_variation_button=self.buttons["⌵ Next Variation"],
+        #                                                             next_device_button=self.buttons["⍈ Next Device"],
+        #                                                             prev_device_button=self.buttons["Prev Device"],
+        #                                                             store_variation_button=self.buttons["◦ Store Variation"],
+        #                                                             recall_variation_button=self.buttons["↩︎ Recall Last Used"],
+        #                                                             randomize_macros_button=self.buttons["⌁ Randomize Macros"],
+        #                                                             selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["① Parameter 1"], self.buttons["② Parameter 2"], self.buttons["③ Parameter 3"], self.buttons["④ Parameter 4"]]]),
+        #                                                             priority=1))
+
+        # """Looper Actions"""
+        # self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
+        #                                                             add_looper = self.buttons["+ Add Looper"],
+        #                                                             sel_prev_looper=self.buttons["⧀ Prev Looper"],
+        #                                                             sel_next_looper=self.buttons["⧁ Next Looper"],
+        #                                                             arm_looper_track=self.buttons[ "⌻ Arm Looper Track"],
+        #                                                             mute_looper_track=self.buttons["⌧ Mute Looper Track"],
+        #                                                             show_looper=self.buttons["⌸ Show Looper"],
+        #                                                             looper_state=self.buttons["Looper State"],
+        #                                                             stop_looper=self.buttons["▣ Stop Looper"],
+        #                                                             clear_all=self.buttons["∅ Clear All"],
+        #                                                             looper_buttons=self.looper_buttons
+        #                                                             ))
+
+        # """Channel Strip Actions"""
+        # self._channel_strip_layer_mode = AddLayerMode(self._mixer.channel_strip(0), Layer(
+        #                                                                                 name_controls=self.buttons["Track Name"]
+        #                                                                                 ))
+
+
+
+        # """Modes switching"""
+        # self.pages = ['page_0', 'page_1', 'page_2']
+        # active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
+        # self._pages_0_1.add_mode(self.pages[0], active_layers)
+        # self._pages_0_1.add_mode(self.pages[1], active_layers, behaviour=CancellableBehaviour())
+        # self._page_2 = AddLayerMode(self._pages_0_1, self._pages_0_1.layer)
+        # self._pages_0_2.add_mode(self.pages[0], active_layers)
+        # self._pages_0_2.add_mode(self.pages[2], active_layers, behaviour=CancellableBehaviour())
+        # self.current_page = 0
+        # self.previous_page_0_1 = 0
+        # self.set_page_0_1_button(self.buttons["⇆ Page 1/2"])
+        # self.set_page_0_2_button(self.buttons["⇆ Page 1/3"])
+        # self.set_prev_page_button(self.buttons["↩ Prev Page"])
+        # self.set_next_page_button(self.buttons["↪ Next Page"])
+        # # self.page_color_button = self.make_button(58, MIDI_CHANNEL, msg_type=MIDI_CC_TYPE)
+        # self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
+        # self._pages_0_1.selected_mode = self.pages[0]
+        # self._pages_0_2.set_enabled(False)
+        # self._pages_0_1.set_enabled(True)
 
     """All the pages action happen at this level of the script, so create the Page switching buttons and functions"""
     def set_page_0_1_button(self, button):
