@@ -1,6 +1,6 @@
-    # Remote Script to make open·control work with Ableton Live
+    # Remote Script to make open.control work with Ableton Live
     # Copyright (C) 2021 Pierre-Antoine GRISON
-    # more info on open·control on http://opencontrol.me
+    # more info on open.control on http://opencontrol.me
 
     # This program is free software: you can redistribute it and/or modify
     # it under the terms of the GNU General Public License as published by
@@ -20,19 +20,19 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import Live  #
-from functools import partial
+# from functools import partial
 import time
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
-from _Framework.Dependency import depends, inject
+# from _Framework.Dependency import depends, inject
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import const, mixin, recursive_map
+# from _Framework.Util import const, mixin, recursive_map
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ModesComponent import ModesComponent, CompoundMode, LayerMode, AddLayerMode, ImmediateBehaviour, CancellableBehaviour, AlternativeBehaviour
+from _Framework.ModesComponent import ModesComponent, AddLayerMode, CancellableBehaviour
 
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonElement import ButtonElement
-from _Framework.EncoderElement import EncoderElement
+# from _Framework.EncoderElement import EncoderElement
 
 from .SpecialSessionComponent import SessionComponent
 from .SpecialMixerComponent import MixerComponent
@@ -53,10 +53,10 @@ REPLY_MSG = (240, 122, 29, 1, 19, 2, 247)
 ACKNOWLEDGMENT_MSG = (240, 122, 29, 1, 19, 78, 247)
 NUM_TRACKS = 1
 
-import logging, traceback
-logger = logging.getLogger(__name__)
-def print(text):
-    logger.warning(text)  
+# import logging, traceback
+# logger = logging.getLogger(__name__)
+# def print(text):
+#     logger.warning(text)  
 
 """ Dictionnaries containing all the actions performed by the buttons/sliders or interpreted by the LEDs.
  It consists of a dictionnary with the name of the action and the associated CC number."""
@@ -64,124 +64,124 @@ def print(text):
 button_actions = {
     "Off": 0,
     "--- Global ---": 0,
-    "■/▶ Start/Stop": 1,
-    "●○ Metronome": 2,
-    "❚▶ Continue Playing": 100,
-    "⤶ Undo": 4,
-    "⤷ Redo": 40,
-    "▢ Capture": 5,
-    "⊕ BPM +1": 28,
-    "⊖ BPM -1": 29,
-    "⮂ Arrangement/Session Toggle": 75,
-    "ℚ MIDI Recording Quantization": 104,
+    "Start/Stop": 1,
+    "Metronome": 2,
+    "Continue Playing": 100,
+    "Undo": 4,
+    "Redo": 40,
+    "Capture": 5,
+    "BPM +1": 28,
+    "BPM -1": 29,
+    "Arrangement/Session Toggle": 75,
+    "MIDI Recording Quantization": 104,
     "Clip/Device Toggle": 76,
     "--- Arrangement ---": 0,
-    "↞ Jump to 1.1.1": 74,
-    "● Arrangement Rec": 6,
-    "⥁ Arrangement Loop": 7,
-    "⇤ Go to Prev Marker": 9,
-    "⇥ Go to Next Marker": 8,
-    "⤓ Add/Delete Marker": 10,
-    "⥀ Loop to Next Marker": 102,
+    "Jump to 1.1.1": 74,
+    "Arrangement Rec": 6,
+    "Arrangement Loop": 7,
+    "Go to Prev Marker": 9,
+    "Go to Next Marker": 8,
+    "Add/Delete Marker": 10,
+    "Loop to Next Marker": 102,
     "Re-enable Automation": 41,
-    "⇶ Back To Arrangement": 42,
+    "Back To Arrangement": 42,
     "Punch In": 38,
     "Punch Out": 39,
-    "⇉ Restart From Last Position": 103,
+    "Restart From Last Position": 103,
     "--- Session ---": 0,
-    "○ Session Rec": 11,
-    "▶ Launch Scene": 13,
-    "⬆ Sel Prev Scene": 14,
-    "⬇ Sel Next Scene": 15,
-    "⬆+4 Jump 4 Scenes Up": 105,
-    "⬇-4 Jump 4 Scenes Down": 106,
-    "⦷ Fixed Length Rec 1 Bars": 107,
-    "⦷ Fixed Length Rec 2 Bars": 108,
-    "⦷ Fixed Length Rec 4 Bars": 109,
-    "⦷ Fixed Length Rec 8 Bars": 110,
-    "⥴ Jump to Playing Scene": 16,
-    "⥅ Insert Scene": 17,
-    "⇴ Capture and Insert Scene": 43,
-    "⧈ Stop All Clips": 3,
-    "➟ Disable Follow Actions": 12,
+    "Session Rec": 11,
+    "Launch Scene": 13,
+    "Sel Prev Scene": 14,
+    "Sel Next Scene": 15,
+    "Jump 4 Scenes Up": 105,
+    "Jump 4 Scenes Down": 106,
+    "Fixed Length Rec 1 Bars": 107,
+    "Fixed Length Rec 2 Bars": 108,
+    "Fixed Length Rec 4 Bars": 109,
+    "Fixed Length Rec 8 Bars": 110,
+    "Jump to Playing Scene": 16,
+    "Insert Scene": 17,
+    "Capture and Insert Scene": 43,
+    "Stop All Clips": 3,
+    "Disable Follow Actions": 12,
     "--- Tracks ---": 0,
-    "← Sel Prev Track": 18,
-    "→ Sel Next Track": 19,
-    "▷ Launch Clip": 22,
-    "↳ Find Empty Slot": 23,
-    "⌧ Mute": 24,
+    "Sel Prev Track": 18,
+    "Sel Next Track": 19,
+    "Launch Clip": 22,
+    "Find Empty Slot": 23,
+    "Mute": 24,
     "S Solo": 25,
-    "⌻ Arm": 26,
-    "■ Stop": 27,
+    "Arm": 26,
+    "Stop": 27,
     "U Fold/Unfold Track": 55,
-    "☆ Add Audio Track": 20,
-    "✬ Add MIDI Track": 21,
+    "Add Audio Track": 20,
+    "Add MIDI Track": 21,
     "--- Looper ---": 0,
-    "① MIDI Map 1 (Big Button)": 0,
-    "② MIDI Map 2 (Clear)": 0,
-    "③ MIDI Map 3 (Undo)": 0,
-    "▣ Stop Looper": 35,
-    "⌻ Arm Looper Track": 30,
-    "⌧ Mute Looper Track": 31,
+    "MIDI Map 1 (Big Button)": 0,
+    "MIDI Map 2 (Clear)": 0,
+    "MIDI Map 3 (Undo)": 0,
+    "Stop Looper": 35,
+    "Arm Looper Track": 30,
+    "Mute Looper Track": 31,
     "+ Add Looper": 47,
-    "⌸ Show Looper": 32,
-    "⧀ Prev Looper": 48,
-    "⧁ Next Looper": 49,
-    "∅ Clear All": 36,
+    "Show Looper": 32,
+    "Prev Looper": 48,
+    "Next Looper": 49,
+    "Clear All": 36,
     "--- Variations ---": 0,
-    "⍇ Prev Device": 65,
-    "⍈ Next Device": 66,
-    "⌃ Prev Variation": 67,
-    "⌵ Next Variation": 68,
-    "▹ Launch Variation": 69,
-    "◦ Store Variation": 70,
-    "↩︎ Recall Last Used": 72, 
-    "⌁ Randomize Macros": 71,
+    "Prev Device": 65,
+    "Next Device": 66,
+    "Prev Variation": 67,
+    "Next Variation": 68,
+    "Launch Variation": 69,
+    "Store Variation": 70,
+    "Recall Last Used": 72, 
+    "Randomize Macros": 71,
     "--- Pages ---": 0,
-    "⇆ Page 1/2": 50,
-    "⇆ Page 1/3": 51,
-    "↩ Prev Page": 56,
-    "↪ Next Page": 57,
+    "Page 1/2": 50,
+    "Page 1/3": 51,
+    "Prev Page": 56,
+    "Next Page": 57,
     "Custom MIDI": 0
   }
 led_actions = {
     "Off": 0,
     "--- Global ---": 0,
-    "■/▶ Start/Stop": 1,
-    "●○ Metronome": 2,
-    "● Arrangement Rec": 6,
-    "⥁ Arrangement Loop": 7,
-    "⇥ Go to Next Marker": 8,
-    "⇤ Go to Prev Marker": 9,
-    "⤓ Add/Delete Marker": 10,
-    "○ Session Rec": 11,
-    "➟ Disable Follow Actions": 12,
-    "ℚ MIDI Recording Quantization": 104,
+    "Start/Stop": 1,
+    "Metronome": 2,
+    "Arrangement Rec": 6,
+    "Arrangement Loop": 7,
+    "Go to Next Marker": 8,
+    "Go to Prev Marker": 9,
+    "Add/Delete Marker": 10,
+    "Session Rec": 11,
+    "Disable Follow Actions": 12,
+    "MIDI Recording Quantization": 104,
     "--- Scenes ---": 0,
-    "▶ Scene Color": 13,
-    "⬆ Prev Scene Color": 14,
-    "⬇ Next Scene Color": 15,
+    "Scene Color": 13,
+    "Prev Scene Color": 14,
+    "Next Scene Color": 15,
     "--- Tracks ---": 0,
-    "✽ Current Track Color": 54,
-    "← Prev Track Color": 18,
-    "→ Next Track Color": 19,
-    "▷ Clip Color": 22,
-    "⌧ Mute": 24,
+    "Current Track Color": 54,
+    "Prev Track Color": 18,
+    "Next Track Color": 19,
+    "Clip Color": 22,
+    "Mute": 24,
     "S Solo": 25,
-    "⌻ Arm": 26,
-    "■ Stop": 27,
+    "Arm": 26,
+    "Stop": 27,
     "--- Looper ---": 0,
-    "⧀ Prev Looper Track Color": 48,
-    "⧁ Next Looper Track Color": 49,
-    "◈ Looper State": 53,
-    "◈ State (LOOPER1)": 77,
-    "◈ State (LOOPER2)": 78,
-    "◈ State (LOOPER3)": 79,
-    "◈ State (LOOPER4)": 80,
-    "◈ State (LOOPER5)": 81,
-    "◈ State (LOOPER6)": 82,
+    "Prev Looper Track Color": 48,
+    "Next Looper Track Color": 49,
+    "Looper State": 53,
+    "State (LOOPER1)": 77,
+    "State (LOOPER2)": 78,
+    "State (LOOPER3)": 79,
+    "State (LOOPER4)": 80,
+    "State (LOOPER5)": 81,
+    "State (LOOPER6)": 82,
     "--- Pages ---": 0,
-    "⇆ Page Color": 58,
+    "Page Color": 58,
   }
 slider_actions = {    
     "--- Global ---": 0,
@@ -204,10 +204,10 @@ slider_actions = {
     "Send A": 59,
     "Send B": 60,
     "--- Selected Device ---": 0,
-    "① Parameter 1": 61,
-    "② Parameter 2": 62,
-    "③ Parameter 3": 63,
-    "④ Parameter 4": 64,
+    "Parameter 1": 61,
+    "Parameter 2": 62,
+    "Parameter 3": 63,
+    "Parameter 4": 64,
     # "Device 1 Param 1": 92,
     # "Device 1 Param 2": 93,
     # "Device 1 Param 3": 94,
@@ -283,14 +283,14 @@ class opencontrol(ControlSurface):
         clip_launch_row = []
 
         for i in range(NUM_TRACKS):
-            mute_row.append(self.buttons["⌧ Mute"])
-            arm_row.append(self.buttons["⌻ Arm"])
-            stop_row.append(self.buttons["■ Stop"])
+            mute_row.append(self.buttons["Mute"])
+            arm_row.append(self.buttons["Arm"])
+            stop_row.append(self.buttons["Stop"])
             solo_row.append(self.buttons["S Solo"])
-            clip_launch_row.append(self.buttons["▷ Launch Clip"])
+            clip_launch_row.append(self.buttons["Launch Clip"])
                     
-        self.looper_buttons = ButtonMatrixElement(rows=[[self.buttons["◈ State (LOOPER1)"], self.buttons["◈ State (LOOPER2)"], self.buttons["◈ State (LOOPER3)"],
-                                                self.buttons["◈ State (LOOPER4)"], self.buttons["◈ State (LOOPER5)"], self.buttons["◈ State (LOOPER6)"]]])
+        self.looper_buttons = ButtonMatrixElement(rows=[[self.buttons["State (LOOPER1)"], self.buttons["State (LOOPER2)"], self.buttons["State (LOOPER3)"],
+                                                self.buttons["State (LOOPER4)"], self.buttons["State (LOOPER5)"], self.buttons["State (LOOPER6)"]]])
         self.mute_buttons = ButtonMatrixElement(rows=[mute_row])
         self.arm_buttons = ButtonMatrixElement(rows=[arm_row])
         self.stop_buttons = ButtonMatrixElement(rows=[stop_row])
@@ -305,37 +305,37 @@ class opencontrol(ControlSurface):
         self._pages_0_1 = ModesComponent(name='pages_0_1', is_enabled=False)
         self._pages_0_2 = ModesComponent(name='pages_0_2', is_enabled=False)
         """Session Actions"""
-        self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["⬆ Sel Prev Scene"],
-                                                                    scene_bank_down_button=self.buttons["⬇ Sel Next Scene"],
-                                                                    scene_bank_up_x4_button=self.buttons["⬆+4 Jump 4 Scenes Up"],
-                                                                    scene_bank_down_x4_button=self.buttons["⬇-4 Jump 4 Scenes Down"],
+        self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["Sel Prev Scene"],
+                                                                    scene_bank_down_button=self.buttons["Sel Next Scene"],
+                                                                    scene_bank_up_x4_button=self.buttons["Jump 4 Scenes Up"],
+                                                                    scene_bank_down_x4_button=self.buttons["Jump 4 Scenes Down"],
                                                                     # scene_launch_buttons=self.scene_launch_buttons,
-                                                                    launch_scene_button=self.buttons["▶ Launch Scene"],
-                                                                    track_bank_left_button=self.buttons["← Sel Prev Track"],
-                                                                    track_bank_right_button=self.buttons["→ Sel Next Track"],
-                                                                    find_next_empty_slot=self.buttons["↳ Find Empty Slot"],
-                                                                    jump_to_playing_scene=self.buttons["⥴ Jump to Playing Scene"],
-                                                                    add_audio_track=self.buttons["☆ Add Audio Track"],
-                                                                    add_MIDI_track=self.buttons["✬ Add MIDI Track"],
-                                                                    insert_scene=self.buttons[ "⥅ Insert Scene"],
-                                                                    capture_and_insert_scene=self.buttons[ "⇴ Capture and Insert Scene"],
-                                                                    undo=self.buttons["⤶ Undo"],
-                                                                    redo=self.buttons["⤷ Redo"],
-                                                                    current_track_color=self.buttons["✽ Current Track Color"],
+                                                                    launch_scene_button=self.buttons["Launch Scene"],
+                                                                    track_bank_left_button=self.buttons["Sel Prev Track"],
+                                                                    track_bank_right_button=self.buttons["Sel Next Track"],
+                                                                    find_next_empty_slot=self.buttons["Find Empty Slot"],
+                                                                    jump_to_playing_scene=self.buttons["Jump to Playing Scene"],
+                                                                    add_audio_track=self.buttons["Add Audio Track"],
+                                                                    add_MIDI_track=self.buttons["Add MIDI Track"],
+                                                                    insert_scene=self.buttons[ "Insert Scene"],
+                                                                    capture_and_insert_scene=self.buttons[ "Capture and Insert Scene"],
+                                                                    undo=self.buttons["Undo"],
+                                                                    redo=self.buttons["Redo"],
+                                                                    current_track_color=self.buttons["Current Track Color"],
                                                                     unfold_track=self.buttons["U Fold/Unfold Track"],
-                                                                    stop_all_clips_button=self.buttons["⧈ Stop All Clips"],
+                                                                    stop_all_clips_button=self.buttons["Stop All Clips"],
                                                                     stop_track_clip_buttons=self.stop_buttons,
                                                                     clip_launch_buttons=self.clip_launch_buttons,
                                                                     last_selected_parameter=self.buttons["Last Selected Parameter"],
-                                                                    main_view_toggle=self.buttons["⮂ Arrangement/Session Toggle"],
+                                                                    main_view_toggle=self.buttons["Arrangement/Session Toggle"],
                                                                     scroll_scenes=self.buttons["Scroll Scenes"],
                                                                     detail_view_toggle=self.buttons["Clip/Device Toggle"],
                                                                     # master_volume=self.buttons["Master Volume"],
                                                                     # cue_volume=self.buttons["Cue Volume"]
-                                                                    fixed_length_rec_1bars=self.buttons["⦷ Fixed Length Rec 1 Bars"],
-                                                                    fixed_length_rec_2bars=self.buttons["⦷ Fixed Length Rec 2 Bars"],
-                                                                    fixed_length_rec_4bars=self.buttons["⦷ Fixed Length Rec 4 Bars"],
-                                                                    fixed_length_rec_8bars=self.buttons["⦷ Fixed Length Rec 8 Bars"],
+                                                                    fixed_length_rec_1bars=self.buttons["Fixed Length Rec 1 Bars"],
+                                                                    fixed_length_rec_2bars=self.buttons["Fixed Length Rec 2 Bars"],
+                                                                    fixed_length_rec_4bars=self.buttons["Fixed Length Rec 4 Bars"],
+                                                                    fixed_length_rec_8bars=self.buttons["Fixed Length Rec 8 Bars"],
                                                                     ))
 
 
@@ -343,32 +343,32 @@ class opencontrol(ControlSurface):
         self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
 
         """Transport Actions"""
-        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["■/▶ Start/Stop"],
-                                                                    loop_button=self.buttons["⥁ Arrangement Loop"],
-                                                                    capture=self.buttons["▢ Capture"],
-                                                                    continue_playing=self.buttons["❚▶ Continue Playing"],
+        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["Start/Stop"],
+                                                                    loop_button=self.buttons["Arrangement Loop"],
+                                                                    capture=self.buttons["Capture"],
+                                                                    continue_playing=self.buttons["Continue Playing"],
                                                                     loop_position=self.buttons["Loop Position"],
                                                                     loop_length=self.buttons["Loop Length"],
                                                                     name_controls=self.buttons["Left Marker Name"],
-                                                                    jump_to_start=self.buttons["↞ Jump to 1.1.1"],
-                                                                    restart_button=self.buttons["⇉ Restart From Last Position"],
-                                                                    set_or_delete_cue_button=self.buttons["⤓ Add/Delete Marker"],
-                                                                    inc_bpm_button=self.buttons["⊕ BPM +1"],
-                                                                    dec_bpm_button=self.buttons["⊖ BPM -1"],
+                                                                    jump_to_start=self.buttons["Jump to 1.1.1"],
+                                                                    restart_button=self.buttons["Restart From Last Position"],
+                                                                    set_or_delete_cue_button=self.buttons["Add/Delete Marker"],
+                                                                    inc_bpm_button=self.buttons["BPM +1"],
+                                                                    dec_bpm_button=self.buttons["BPM -1"],
                                                                     inc_dec_bpm_button=self.buttons["BPM +/- 1"],
                                                                     punch_in_button=self.buttons["Punch In"],
                                                                     punch_out_button=self.buttons["Punch Out"],
                                                                     h_zoom=self.buttons["Horizontal Zoom"],
-                                                                    back_to_arrangement_button=self.buttons["⇶ Back To Arrangement"],
-                                                                    midi_recording_quantization_button=self.buttons["ℚ MIDI Recording Quantization"],
+                                                                    back_to_arrangement_button=self.buttons["Back To Arrangement"],
+                                                                    midi_recording_quantization_button=self.buttons["MIDI Recording Quantization"],
                                                                     re_enable_automation_button=self.buttons["Re-enable Automation"],
-                                                                    prev_cue_button=self.buttons["⇤ Go to Prev Marker"],
-                                                                    next_cue_button=self.buttons["⇥ Go to Next Marker"],
+                                                                    prev_cue_button=self.buttons["Go to Prev Marker"],
+                                                                    next_cue_button=self.buttons["Go to Next Marker"],
                                                                     prev_next_cue_button=self.buttons["Jump to Next/Prev Marker"],
-                                                                    marker_loop_button=self.buttons["⥀ Loop to Next Marker"],
-                                                                    metronome=self.buttons["●○ Metronome"],
-                                                                    record_button=self.buttons["● Arrangement Rec"],
-                                                                    session_record_button=self.buttons["○ Session Rec"],
+                                                                    marker_loop_button=self.buttons["Loop to Next Marker"],
+                                                                    metronome=self.buttons["Metronome"],
+                                                                    record_button=self.buttons["Arrangement Rec"],
+                                                                    session_record_button=self.buttons["Session Rec"],
                                                                     skip=self.buttons["Skip Fwd/Bckwd"],
                                                                     groove_amount=self.buttons["Global Groove Amount"]
                                                                     ))
@@ -384,28 +384,28 @@ class opencontrol(ControlSurface):
                                                             ))
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
-                                                                    launch_variation_button=self.buttons["▹ Launch Variation"],
-                                                                    prev_variation_button=self.buttons["⌃ Prev Variation"],
-                                                                    next_variation_button=self.buttons["⌵ Next Variation"],
-                                                                    next_device_button=self.buttons["⍈ Next Device"],
-                                                                    prev_device_button=self.buttons["⍇ Prev Device"],
-                                                                    store_variation_button=self.buttons["◦ Store Variation"],
-                                                                    recall_variation_button=self.buttons["↩︎ Recall Last Used"],
-                                                                    randomize_macros_button=self.buttons["⌁ Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["① Parameter 1"], self.buttons["② Parameter 2"], self.buttons["③ Parameter 3"], self.buttons["④ Parameter 4"]]]),
+                                                                    launch_variation_button=self.buttons["Launch Variation"],
+                                                                    prev_variation_button=self.buttons["Prev Variation"],
+                                                                    next_variation_button=self.buttons["Next Variation"],
+                                                                    next_device_button=self.buttons["Next Device"],
+                                                                    prev_device_button=self.buttons["Prev Device"],
+                                                                    store_variation_button=self.buttons["Store Variation"],
+                                                                    recall_variation_button=self.buttons["Recall Last Used"],
+                                                                    randomize_macros_button=self.buttons["Randomize Macros"],
+                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
                                                                     priority=1))
 
         """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
                                                                     add_looper = self.buttons["+ Add Looper"],
-                                                                    sel_prev_looper=self.buttons["⧀ Prev Looper"],
-                                                                    sel_next_looper=self.buttons["⧁ Next Looper"],
-                                                                    arm_looper_track=self.buttons[ "⌻ Arm Looper Track"],
-                                                                    mute_looper_track=self.buttons["⌧ Mute Looper Track"],
-                                                                    show_looper=self.buttons["⌸ Show Looper"],
-                                                                    looper_state=self.buttons["◈ Looper State"],
-                                                                    stop_looper=self.buttons["▣ Stop Looper"],
-                                                                    clear_all=self.buttons["∅ Clear All"],
+                                                                    sel_prev_looper=self.buttons["Prev Looper"],
+                                                                    sel_next_looper=self.buttons["Next Looper"],
+                                                                    arm_looper_track=self.buttons[ "Arm Looper Track"],
+                                                                    mute_looper_track=self.buttons["Mute Looper Track"],
+                                                                    show_looper=self.buttons["Show Looper"],
+                                                                    looper_state=self.buttons["Looper State"],
+                                                                    stop_looper=self.buttons["Stop Looper"],
+                                                                    clear_all=self.buttons["Clear All"],
                                                                     looper_buttons=self.looper_buttons
                                                                     ))
 
@@ -426,10 +426,10 @@ class opencontrol(ControlSurface):
         self._pages_0_2.add_mode(self.pages[2], active_layers, behaviour=CancellableBehaviour())
         self.current_page = 0
         self.previous_page_0_1 = 0
-        self.set_page_0_1_button(self.buttons["⇆ Page 1/2"])
-        self.set_page_0_2_button(self.buttons["⇆ Page 1/3"])
-        self.set_prev_page_button(self.buttons["↩ Prev Page"])
-        self.set_next_page_button(self.buttons["↪ Next Page"])
+        self.set_page_0_1_button(self.buttons["Page 1/2"])
+        self.set_page_0_2_button(self.buttons["Page 1/3"])
+        self.set_prev_page_button(self.buttons["Prev Page"])
+        self.set_next_page_button(self.buttons["Next Page"])
         # self.page_color_button = self.make_button(58, MIDI_CHANNEL, msg_type=MIDI_CC_TYPE)
         self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
         self._pages_0_1.selected_mode = self.pages[0]

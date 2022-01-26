@@ -10,8 +10,8 @@ from _Framework.ButtonElement import ButtonElement
 MIDI_CHANNEL = 15
 state_color = {0: 122, 1: 127, 2: 126, 3: 125}
 
-import logging, traceback
-logger = logging.getLogger(__name__)
+# import logging, traceback
+# logger = logging.getLogger(__name__)
 # def print(text):
 #     logger.warning(text)
 
@@ -173,7 +173,6 @@ class LooperComponent(DeviceBase):
         return can_parent
 
     def _looper_selected_changed(self):
-        print(["looper", self._active_looper_number])
         if self._active_looper_number > 0:
             self._change_looper_buttons(self._active_looper_number)
             self.looper_state_changed()
@@ -343,7 +342,6 @@ class LooperComponent(DeviceBase):
         super(LooperComponent, self).disconnect()
 
     def update(self):
-        print("update")
         super(LooperComponent, self).update()
         self._looper_selected_changed()
         self._send_sysex_for_name("L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))

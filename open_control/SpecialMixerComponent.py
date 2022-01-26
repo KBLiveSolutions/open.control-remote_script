@@ -9,8 +9,8 @@ from _Framework.SubjectSlot import subject_slot_group
 
 from .SpecialChannelStripComponent import ChannelStripComponent
 
-import logging, traceback
-logger = logging.getLogger(__name__)
+# import logging, traceback
+# logger = logging.getLogger(__name__)
 # def print(text):
 #     logger.warning(text)
 

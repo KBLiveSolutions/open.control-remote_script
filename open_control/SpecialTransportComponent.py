@@ -5,8 +5,8 @@ from _Framework.SubjectSlot import subject_slot
 from _Framework.ControlSurface import ControlSurface
 from . import Options
 import time
-import logging, traceback
-logger = logging.getLogger(__name__)
+# import logging, traceback
+# logger = logging.getLogger(__name__)
 # def print(text):
 #     logger.warning(text)
 
@@ -43,8 +43,8 @@ class TransportComponent(TransportBase):
     def disconnect(self):
         super(TransportComponent, self).disconnect()
     
-    def _print(self, text):
-        logger.warning(text)
+    # def _print(self, text):
+    #     logger.warning(text)
         
     def set_name_controls(self, name):
         self._name_controls = name
@@ -481,7 +481,6 @@ class TransportComponent(TransportBase):
                 #     self.selected_cue.jump()
                 # break
         if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
-            self._print(["SEL CUE", self.selected_cue.name])
             self._send_sysex_for_name(self.selected_cue.name)
             if self.prev_cue:
                 self.prev_cue.remove_name_listener(self._on_name_changed)
