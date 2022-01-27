@@ -220,6 +220,8 @@ class SessionComponent(SessionBase):
 
     def on_selected_scene_changed(self):
         self.selected_scene = self._song.view.selected_scene
+        self._on_scene_color_changed.subject = self.selected_scene
+        self._on_scene_name_changed.subject = self.selected_scene
         if self.selected_scene in self._song.scenes and Options.session_box_linked_to_selection:
             self._scene_offset = int(list(self._song.scenes).index(self.selected_scene))
             if self._track_offset is not -1 and self._scene_offset is not -1:
@@ -229,6 +231,7 @@ class SessionComponent(SessionBase):
 
     def on_selected_track_changed(self):
         self.selected_track = self._song.view.selected_track
+        self._on_track_color_changed.subject = self.song().view.selected_track
         if self.selected_track in self._song.visible_tracks and Options.session_box_linked_to_selection:
             self._track_offset = list(self._song.visible_tracks).index(self.selected_track)
             if self._track_offset > -1 and self._scene_offset > -1:
@@ -441,9 +444,6 @@ class SessionComponent(SessionBase):
 
     def _setup_scene_listeners(self):
         self._on_scene_triggered.replace_subjects(self._song.scenes, count())
-        self._on_scene_color_changed.subject = self.song().view.selected_scene
-        self._on_track_color_changed.subject = self.song().view.selected_track
-        self._on_scene_name_changed.subject = self.song().view.selected_scene
 
     @subject_slot('color')
     def _on_track_color_changed(self):
@@ -493,10 +493,11 @@ class SessionComponent(SessionBase):
         name = None
         scene = self._song.scenes[self._scene_offset]
         if self.is_enabled():
-            name = scene.name.strip()
-            if len(name) == 0:
-                name = str(list(self._song.scenes).index(scene)+1)
-            self.send_sysex_for_name(0, name)
+            if self._scene_offset == self.song().view.selected_scene:
+                name = scene.name.strip()
+                if len(name) == 0:
+                    name = str(list(self._song.scenes).index(scene)+1)
+                self.send_sysex_for_name(0, name)
         self.scan_setlist()
 
     """ Various functions """
