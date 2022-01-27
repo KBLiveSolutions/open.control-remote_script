@@ -40,6 +40,9 @@ class TransportComponent(TransportBase):
         self.compare_cue()
         self.restart_position = self.song().current_song_time
 
+    def set_session(self, session):
+        self._session = session
+
     def disconnect(self):
         super(TransportComponent, self).disconnect()
     
@@ -184,7 +187,10 @@ class TransportComponent(TransportBase):
     @subject_slot(u'value')
     def _on_continue_playing_button(self, value):
         if value:
-            self.song().continue_playing()
+            if self.song().is_playing:
+                self.song().stop_playing()
+            else:
+                self.song().continue_playing()
 
 
     def set_record_button(self, button):
@@ -397,10 +403,13 @@ class TransportComponent(TransportBase):
         if self.is_enabled() and self._start_stop_button and self._metronome_button:
             if self.song().is_playing:
                 self.restart_position = self._song.current_song_time
-                color = 65
+                color1 = 65
+                color2 = 126
             else:
-                color = 0
-            self._start_stop_button.send_value(color, force=True)
+                color1 = 0
+                color2 = 65
+            self._start_stop_button.send_value(color1, force=True)
+            self._continue_playing_button.send_value(color2, force=True)
 
     @subject_slot('session_record')
     def _on_session_record_changed(self):
@@ -505,6 +514,7 @@ class TransportComponent(TransportBase):
             self._send_sysex_for_name(self.prev_cue.name)
         else:
             self._send_sysex_for_name("No Marker")
+        self._session.scan_setlist()
 
     def check_stop(self, name):
         num1 = name.find("(STOP)")

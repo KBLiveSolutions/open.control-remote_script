@@ -344,4 +344,7 @@ class LooperComponent(DeviceBase):
     def update(self):
         super(LooperComponent, self).update()
         self._looper_selected_changed()
-        self._send_sysex_for_name("L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))
+        if self._active_looper_number == 0:
+            self._send_sysex_for_name("Add Looper")
+        else:
+            self._send_sysex_for_name("L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))

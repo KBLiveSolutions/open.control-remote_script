@@ -20,19 +20,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import Live  #
-# from functools import partial
-import time
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
-# from _Framework.Dependency import depends, inject
 from _Framework.SubjectSlot import subject_slot
-# from _Framework.Util import const, mixin, recursive_map
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ModesComponent import ModesComponent, AddLayerMode, CancellableBehaviour
 
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonElement import ButtonElement
-# from _Framework.EncoderElement import EncoderElement
 
 from .SpecialSessionComponent import SessionComponent
 from .SpecialMixerComponent import MixerComponent
@@ -45,7 +40,7 @@ from . import Options
 MIDI_CHANNEL = 15
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.1'
+SCRIPT_VER = 'v1.2'
 MAX_REQUESTS = 10
 prefix = (240, 122, 29, 1, 19)
 REQUEST_MSG = (240, 122, 29, 1, 19, 2, 247)
@@ -53,13 +48,14 @@ REPLY_MSG = (240, 122, 29, 1, 19, 2, 247)
 ACKNOWLEDGMENT_MSG = (240, 122, 29, 1, 19, 78, 247)
 NUM_TRACKS = 1
 
-# import logging, traceback
-# logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)  
+import logging, traceback
+logger = logging.getLogger(__name__)
+def print(text):
+    logger.warning(text)  
 
 """ Dictionnaries containing all the actions performed by the buttons/sliders or interpreted by the LEDs.
  It consists of a dictionnary with the name of the action and the associated CC number."""
+
 
 button_actions = {
     "Off": 0,
@@ -116,6 +112,12 @@ button_actions = {
     "U Fold/Unfold Track": 55,
     "Add Audio Track": 20,
     "Add MIDI Track": 21,
+    "--- Setlist ---": 0,
+    "Prev Setlist Song": 33,
+    "Next Setlist Song": 34,
+    "Launch Setlist Song": 44,
+    "Refresh Setlist": 46,
+    "Launch Setlist Song NoQ": 45,
     "--- Looper ---": 0,
     "MIDI Map 1 (Big Button)": 0,
     "MIDI Map 2 (Clear)": 0,
@@ -240,6 +242,7 @@ class opencontrol(ControlSurface):
             self._mixer = MixerComponent(num_tracks=NUM_TRACKS)
             self._session.set_mixer(self._mixer)
             self._transport = TransportComponent()
+            self._transport.set_session(self._session)
             self._device = DeviceComponent(device_selection_follows_track_selection=True)
             self._looper = LooperComponent(device_selection_follows_track_selection=False)
             self._create_pages()
@@ -304,6 +307,8 @@ class opencontrol(ControlSurface):
         """ Create all the pages and Layers"""
         self._pages_0_1 = ModesComponent(name='pages_0_1', is_enabled=False)
         self._pages_0_2 = ModesComponent(name='pages_0_2', is_enabled=False)
+
+
         """Session Actions"""
         self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["Sel Prev Scene"],
                                                                     scene_bank_down_button=self.buttons["Sel Next Scene"],
@@ -336,11 +341,12 @@ class opencontrol(ControlSurface):
                                                                     fixed_length_rec_2bars=self.buttons["Fixed Length Rec 2 Bars"],
                                                                     fixed_length_rec_4bars=self.buttons["Fixed Length Rec 4 Bars"],
                                                                     fixed_length_rec_8bars=self.buttons["Fixed Length Rec 8 Bars"],
+                                                                    prev_setlist_song=self.buttons[ "Prev Setlist Song"],
+                                                                    next_setlist_song=self.buttons["Next Setlist Song"],
+                                                                    launch_setlist_song=self.buttons["Launch Setlist Song"],
+                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
+                                                                    refresh_setlist=self.buttons["Refresh Setlist"]
                                                                     ))
-
-
-
-        self._scene_layer_mode = AddLayerMode(self._session.scene(0), Layer(name_controls = self.buttons["Scene Name"]))
 
         """Transport Actions"""
         self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["Start/Stop"],
@@ -418,7 +424,7 @@ class opencontrol(ControlSurface):
 
         """Modes switching"""
         self.pages = ['page_0', 'page_1', 'page_2']
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._scene_layer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
         self._pages_0_1.add_mode(self.pages[0], active_layers)
         self._pages_0_1.add_mode(self.pages[1], active_layers, behaviour=CancellableBehaviour())
         self._page_2 = AddLayerMode(self._pages_0_1, self._pages_0_1.layer)
@@ -435,6 +441,7 @@ class opencontrol(ControlSurface):
         self._pages_0_1.selected_mode = self.pages[0]
         self._pages_0_2.set_enabled(False)
         self._pages_0_1.set_enabled(True)
+
 
     """All the pages action happen at this level of the script, so create the Page switching buttons and functions"""
     def set_page_0_1_button(self, button):
@@ -519,7 +526,7 @@ class opencontrol(ControlSurface):
             self.schedule_message(1, self.refresh_state)
         """ If Handshake successful, call the update function for each Layout"""
         if midi_bytes == ACKNOWLEDGMENT_MSG:
-            self._session.scene(0)._on_scene_name_changed()
+            # self._session.scene(0)._on_scene_name_changed()
             self._mixer.channel_strip(0)._on_track_name_changed()
             # self._device._on_device_name_changed()
             self._transport._on_name_changed()

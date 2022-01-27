@@ -11,7 +11,7 @@ from _Framework.SubjectSlot import subject_slot_group, subject_slot
 # from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotBase
 # from _Framework.SceneComponent import SceneComponent as SceneBase
 from . import Colors, Options
-from .SpecialSceneComponent import SceneComponent
+# from .SpecialSceneComponent import SceneComponent
 
 import logging, traceback
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class SessionComponent(SessionBase):
     """ SessionComponent extends the standard to use a custom SceneComponent, use custom
     ring handling and observe the status of scenes. """
-    scene_component_type = SceneComponent
+    # scene_component_type = SceneComponent
     def __init__(self, *a, **k):
         self._clip_launch_button = None
         self._launch_scene_button = None
@@ -43,7 +43,10 @@ class SessionComponent(SessionBase):
         self._main_view_toggle_button = None
         self._detail_view_toggle_button = None
         self._track_leds = [None, None, None]
+        self._launch_setlist_song_button = None
         self.last_parameter_button_changing = False
+        self.selected_setlist_song = None
+        self.playing_song = None
         self.last_message_time = 0
         self.view = None
         super(SessionComponent, self).__init__(*a, **k)
@@ -55,6 +58,7 @@ class SessionComponent(SessionBase):
         clip_color_table = Colors.LIVE_COLORS_TO_MIDI_VALUES.copy()
         clip_color_table[16777215] = 119
         self.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
+        self.scan_setlist()
 
     def disconnect(self):
         super(SessionComponent, self).disconnect()
@@ -216,6 +220,8 @@ class SessionComponent(SessionBase):
 
     def on_selected_scene_changed(self):
         self.selected_scene = self._song.view.selected_scene
+        self._on_scene_color_changed.subject = self.selected_scene
+        self._on_scene_name_changed.subject = self.selected_scene
         if self.selected_scene in self._song.scenes and Options.session_box_linked_to_selection:
             self._scene_offset = int(list(self._song.scenes).index(self.selected_scene))
             if self._track_offset is not -1 and self._scene_offset is not -1:
@@ -225,6 +231,7 @@ class SessionComponent(SessionBase):
 
     def on_selected_track_changed(self):
         self.selected_track = self._song.view.selected_track
+        self._on_track_color_changed.subject = self.song().view.selected_track
         if self.selected_track in self._song.visible_tracks and Options.session_box_linked_to_selection:
             self._track_offset = list(self._song.visible_tracks).index(self.selected_track)
             if self._track_offset > -1 and self._scene_offset > -1:
@@ -233,7 +240,6 @@ class SessionComponent(SessionBase):
 
     def on_selected_parameter_changed(self):
         parameter = self.song().view.selected_parameter
-        print(["on_selected_parameter_changed", self.get_parameter_value(parameter, parameter.value)])
         self._last_selected_parameter_button.send_value(self.get_parameter_value(parameter, parameter.value), force=True)
         self._on_last_selected_parameter_changed.subject = parameter
 
@@ -482,6 +488,18 @@ class SessionComponent(SessionBase):
                     for b in button:
                         b.send_value(color, force=True, channel=channel)
 
+    @subject_slot('name')
+    def _on_scene_name_changed(self):
+        name = None
+        scene = self._song.scenes[self._scene_offset]
+        if self.is_enabled():
+            if self._scene_offset == self.song().view.selected_scene:
+                name = scene.name.strip()
+                if len(name) == 0:
+                    name = str(list(self._song.scenes).index(scene)+1)
+                self.send_sysex_for_name(0, name)
+        self.scan_setlist()
+
     """ Various functions """
 
     def _change_offsets(self, track_increment, scene_increment):
@@ -492,9 +510,10 @@ class SessionComponent(SessionBase):
     def _update_position_status_control(self, is_triggered=False):
         if self.is_enabled() and self._track_offset > -1 and self._scene_offset > -1:
             self._do_show_highlight()
-            self._on_scene_color_changed(is_triggered)
+            self._on_scene_color_changed()
             self._on_track_color_changed()
             self._setup_scene_listeners()
+            self._on_scene_name_changed()
 
     def set_stopped_clip_value(self, value):
         self._stopped_clip_value = value
@@ -539,3 +558,156 @@ class SessionComponent(SessionBase):
         if self._last_selected_parameter_button is not None and time.time() - self.last_message_time > Options.display_time:
             self._last_selected_parameter_button._send_midi(tuple(message))
             self.last_message_time = time.time()
+
+    @subject_slot('value')
+    def scan_setlist(self, value=127):
+        if value:
+            self.setlist = {}
+            for s in self.song().scenes:
+                number = self.find_song_in_name(s)
+                if number > -1 and number not in self.setlist:
+                    self.setlist[number] = s
+            for cue in self.song().cue_points:
+                number = self.find_song_in_name(cue)
+                if number > -1 and number not in self.setlist:
+                    self.setlist[number] = cue
+            if len(self.sorted_setlist_keys) > 0:
+                if self.selected_setlist_song is None:
+                    self.selected_setlist_song = self.sorted_setlist_keys[0]
+                self.show_song_name()
+                self._on_setlist_song_color_changed()
+            else:
+                self.send_sysex_for_name(5, "Add Songs")
+
+    def find_song_in_name(self, item):
+        number = -1
+        num1 = item.name.find("(SONG")
+        if num1 > -1:
+            num2 = item.name.find(")")
+            number = int(item.name[num1+5:num2])
+        return number
+
+    def set_prev_setlist_song(self, button):
+        self._prev_setlist_song_button = button
+        self._prev_setlist_song_button_value.subject = button
+
+    def set_next_setlist_song(self, button):
+        self._next_setlist_song_button = button
+        self._next_setlist_song_button_value.subject = button
+
+    def set_launch_setlist_song(self, button):
+        self._launch_setlist_song_button = button
+        self._launch_setlist_song_button_value.subject = button
+
+    def set_launch_setlist_song_noq(self, button):
+        self._launch_setlist_song_noq_button = button
+        self._launch_setlist_song_noq_button_value.subject = button
+
+    def set_refresh_setlist(self, button):
+        self._refresh_setlist_button = button
+        self.scan_setlist.subject = button
+        self.scan_setlist()
+
+    def show_song_name(self):
+        # if self.selected_setlist_song is not None:
+        new_name = self.setlist[self.selected_setlist_song].name
+        num1 = new_name.find("(SONG")
+        num2 = new_name.find(")", num1)
+        number = new_name[num1+5:num2]
+        new_name = new_name[:num1] + new_name[num2+1:]
+        self.send_sysex_for_name(5, "[" + number + "] " + new_name)
+
+    @subject_slot('value')
+    def _launch_setlist_song_button_value(self, value):
+        if value:
+            self.launch_song()
+
+    @subject_slot('value')
+    def _launch_setlist_song_noq_button_value(self, value):
+        if value:
+            self.song().stop_playing()
+            self.launch_song()
+
+    def launch_song(self):
+            self.playing_song = self.setlist[self.selected_setlist_song]
+            if self.playing_song in self.song().scenes:
+                self.playing_song.fire()
+            elif self.playing_song in self.song().cue_points:
+                self.song().back_to_arranger = 0
+                self.playing_song.jump()
+                self.song().start_playing()
+            self._on_setlist_song_color_changed()
+
+    @subject_slot('value')
+    def _next_setlist_song_button_value(self, value):
+        if value:
+            index = min(self._setlist_song_index() + 1, len(self.sorted_setlist_keys))
+            self.selected_setlist_song = self.sorted_setlist_keys[index]
+            self.select_scene_cuepoint()
+            self.show_song_name()
+            self._on_setlist_song_color_changed()
+
+    @subject_slot('value')
+    def _prev_setlist_song_button_value(self, value):
+        if value:
+            index = max(self._setlist_song_index() - 1, 0)
+            self.selected_setlist_song = self.sorted_setlist_keys[index]
+            self.select_scene_cuepoint()
+            self.show_song_name()
+            self._on_setlist_song_color_changed()
+    
+    def select_scene_cuepoint(self):
+        if self.setlist[self.selected_setlist_song] in self.song().scenes:
+            self.song().view.selected_scene = self.setlist[self.selected_setlist_song]
+
+    def _setlist_song_index(self):
+        return self.sorted_setlist_keys.index(self.selected_setlist_song)
+
+    def send_sysex_for_name(self, display_type, name):       
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 51, display_type]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self.is_enabled() and self._launch_setlist_song_button:     
+            self._launch_setlist_song_button._send_midi(tuple(message))
+
+    @property
+    def sorted_setlist_keys(self):
+        return sorted(list(self.setlist.keys()))
+
+    @subject_slot('color')
+    def _on_setlist_song_color_changed(self, is_triggered=False):
+            index_list = [-1, 0, 1]
+            if self._launch_setlist_song_button and self._prev_setlist_song_button and self._next_setlist_song_button:
+                buttons = [self._prev_setlist_song_button, self._launch_setlist_song_button, self._next_setlist_song_button]
+                for index, button in zip(index_list, buttons):
+                    ind = self._setlist_song_index() + index
+                    if -1 < ind < len(self.sorted_setlist_keys):
+                        song = self.setlist[self.sorted_setlist_keys[ind]]
+                        if song in self.song().scenes:
+                            if song.color_index:
+                                color = song.color_index
+                                channel = 15
+                            else:
+                                color = 124
+                                channel = 15
+                            # if self._last_triggered_scene_index is not None and self._last_triggered_scene_index == ind:
+                            #     color = 126
+                            #     channel = 14
+                            # if scene.is_triggered:
+                            #     color = 126
+                            #     channel = 13
+                        else:
+                            color = 120
+                            channel = 15
+                        if self.playing_song is not None and song == self.playing_song:
+                            channel = 14
+
+                    else:
+                        color = 0
+                        channel = 15
+                    button.send_value(color, force=True, channel=channel)

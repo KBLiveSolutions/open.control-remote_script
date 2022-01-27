@@ -120,8 +120,8 @@ class DeviceComponent(DeviceComponentBase):
 
     def _update_name(self):
         appointed_device = self.song().appointed_device
-        name = appointed_device.name
         if appointed_device is not None:
+            name = appointed_device.name
             if self._device and self._device.can_have_chains:
                 name = "V" + str(self._device.selected_variation_index+1) +":"+ name
             else:
@@ -191,7 +191,7 @@ class DeviceComponent(DeviceComponentBase):
         self._update_name()
 
     def update(self):
-        # self._update_name()
+        self._update_name()
         super(DeviceComponent, self).update()
 
     def disconnect(self):
