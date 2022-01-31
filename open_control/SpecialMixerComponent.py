@@ -63,7 +63,7 @@ class MixerComponent(MixerBase):
 
     @subject_slot('value')
     def _send_controls_value(self, *args):
-        sends = self._selected_strip.mixer_device.sends[args[1]]
+        sends = self._selected_strip._track.mixer_device.sends[args[1]]
         self._send_direct_sysex_for_name(str(sends))
 
     @subject_slot('value')
