@@ -286,13 +286,6 @@ class SessionComponent(SessionBase):
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
     @subject_slot('value')
-    def _track_bank_left_value(self, value):
-        if value:
-            self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
-
-    @subject_slot('value')
     def _scene_bank_up_x4_value(self, value):
         if value:
             self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 4))
@@ -306,11 +299,19 @@ class SessionComponent(SessionBase):
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
+    @subject_slot('value')
+    def _track_bank_left_value(self, value):
+        if value:
+            self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
+            self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_track = self._song.tracks[self.track_offset()]
 
     @subject_slot('value')
     def _track_bank_right_value(self, value):
         if value:
             self.set_offsets(self.track_offset() + 1, self.scene_offset())
+            self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_track = self._song.tracks[self.track_offset()]
 
@@ -559,6 +560,8 @@ class SessionComponent(SessionBase):
             self._last_selected_parameter_button._send_midi(tuple(message))
             self.last_message_time = time.time()
 
+    """ Setlist"""
+    
     @subject_slot('value')
     def scan_setlist(self, value=127):
         if value:

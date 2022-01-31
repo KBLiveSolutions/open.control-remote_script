@@ -63,17 +63,17 @@ class MixerComponent(MixerBase):
 
     @subject_slot('value')
     def _send_controls_value(self, *args):
-        sends = self.song().view.selected_track.mixer_device.sends[args[1]]
+        sends = self._selected_strip.mixer_device.sends[args[1]]
         self._send_direct_sysex_for_name(str(sends))
 
     @subject_slot('value')
     def _volume_value(self, value):
-        volume = self.song().view.selected_track.mixer_device.volume
+        volume = self._selected_strip._track.mixer_device.volume
         self._send_direct_sysex_for_name(str(volume))
 
     @subject_slot('value')
     def _pan_value(self, value):
-        panning = self.song().view.selected_track.mixer_device.panning
+        panning = self._selected_strip._track.mixer_device.panning
         self._send_direct_sysex_for_name(str(panning))
 
     def _send_direct_sysex_for_name(self, name):
