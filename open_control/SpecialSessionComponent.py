@@ -8,6 +8,7 @@ import time
 
 from _Framework.SessionComponent import SessionComponent as SessionBase
 from _Framework.SubjectSlot import subject_slot_group, subject_slot
+from ableton.v2.base import clamp
 # from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotBase
 # from _Framework.SceneComponent import SceneComponent as SceneBase
 from . import Colors, Options
@@ -22,7 +23,8 @@ class SessionComponent(SessionBase):
     """ SessionComponent extends the standard to use a custom SceneComponent, use custom
     ring handling and observe the status of scenes. """
     # scene_component_type = SceneComponent
-    def __init__(self, *a, **k):
+    def __init__(self, open_control, *a, **k):
+        self.open_control = open_control
         self._clip_launch_button = None
         self._launch_scene_button = None
         self._launch_as_selected_button = None
@@ -275,6 +277,7 @@ class SessionComponent(SessionBase):
     def _scene_bank_up_value(self, value):
         if value:
             self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 1))
+            self.open_control.update_view("Session")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
@@ -282,6 +285,7 @@ class SessionComponent(SessionBase):
     def _scene_bank_down_value(self, value):
         if value:
             self.set_offsets(self.track_offset(), self.scene_offset() + 1)
+            self.open_control.update_view("Session")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
@@ -289,6 +293,7 @@ class SessionComponent(SessionBase):
     def _scene_bank_up_x4_value(self, value):
         if value:
             self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 4))
+            self.open_control.update_view("Session")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
@@ -296,6 +301,7 @@ class SessionComponent(SessionBase):
     def _scene_bank_down_x4_value(self, value):
         if value:
             self.set_offsets(self.track_offset(), self.scene_offset() + 4)
+            self.open_control.update_view("Session")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
 
@@ -304,6 +310,7 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
             self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
+            self.open_control.update_view("Track")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_track = self._song.tracks[self.track_offset()]
 
@@ -312,6 +319,7 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(self.track_offset() + 1, self.scene_offset())
             self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
+            self.open_control.update_view("Track")
             if Options.session_box_linked_to_selection:
                 self._song.view.selected_track = self._song.tracks[self.track_offset()]
 
@@ -646,6 +654,7 @@ class SessionComponent(SessionBase):
         if value:
             index = min(self._setlist_song_index() + 1, len(self.sorted_setlist_keys))
             self.selected_setlist_song = self.sorted_setlist_keys[index]
+            self.open_control.update_view("Setlist")
             self.select_scene_cuepoint()
             self.show_song_name()
             self._on_setlist_song_color_changed()
@@ -653,8 +662,10 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _prev_setlist_song_button_value(self, value):
         if value:
-            index = max(self._setlist_song_index() - 1, 0)
+            # index = max(self._setlist_song_index() - 1, 0)
+            index = clamp(self._setlist_song_index() - 1, 0, len(self._setlist_song_index()) - 1)
             self.selected_setlist_song = self.sorted_setlist_keys[index]
+            self.open_control.update_view("Setlist")
             self.select_scene_cuepoint()
             self.show_song_name()
             self._on_setlist_song_color_changed()
