@@ -34,6 +34,7 @@ from .SpecialMixerComponent import MixerComponent
 from .SpecialTransportComponent import TransportComponent
 from .SpecialDeviceComponent import DeviceComponent
 from .LooperComponent import LooperComponent
+from .BrowserComponent import BrowserComponent
 from .Skin import make_default_skin
 from . import Options
 
@@ -112,6 +113,11 @@ button_actions = {
     "U Fold/Unfold Track": 55,
     "Add Audio Track": 20,
     "Add MIDI Track": 21,
+    "--- Browser ---": 0,
+    "Prev Item": 111,
+    "Next Item": 112,
+    "Hotswap": 113,
+    "Load Item": 114,
     "--- Setlist ---": 0,
     "Prev Setlist Song": 33,
     "Next Setlist Song": 34,
@@ -238,19 +244,21 @@ class opencontrol(ControlSurface):
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
-            self._session = SessionComponent( num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
+            self._session = SessionComponent(self, num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
             self._mixer = MixerComponent(num_tracks=NUM_TRACKS)
             self._session.set_mixer(self._mixer)
             self._transport = TransportComponent()
             self._transport.set_session(self._session)
             self._device = DeviceComponent(device_selection_follows_track_selection=True)
-            self._looper = LooperComponent(device_selection_follows_track_selection=False)
+            self._looper = LooperComponent(self, device_selection_follows_track_selection=False)
+            self._browser = BrowserComponent(self)
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
             self.song().add_current_song_time_listener(self.on_time_change)
             self.song().add_is_playing_listener(self.on_is_playing_change)
             self.application().view.add_focused_document_view_listener(self.on_view_changed)
+            self.on_view_changed()
             # self.set_device_component(self._looper)
             self.check_session_box()
             if Live.Application.get_application().get_major_version() == 9:
@@ -259,9 +267,14 @@ class opencontrol(ControlSurface):
         self.log_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
 
+
     def on_view_changed(self):
+        self.update_view(self.application().view.focused_document_view)
+
+    def update_view(self, view):
+        self.current_view = view
         for page in self.linked_page:
-            if self.linked_page[page] == self.application().view.focused_document_view and  self.current_page != page:
+            if self.linked_page[page] == self.current_view and  self.current_page != page:
                 self.current_page = page
                 self.enable_page()
 
@@ -388,6 +401,15 @@ class opencontrol(ControlSurface):
                                                             pan=self.buttons["Pan"],
                                                             send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
+
+        """Browser Actions"""
+        self._browser_mode = AddLayerMode(self._browser, Layer(
+                                                                select_prev_item=self.buttons["Prev Item"],
+                                                                select_next_item=self.buttons["Next Item"],
+                                                                hotswap_button=self.buttons["Hotswap"],
+                                                                load_item=self.buttons["Load Item"],
+                                                                ))
+                                                            
         """Devices Actions"""
         self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
                                                                     launch_variation_button=self.buttons["Launch Variation"],
@@ -424,7 +446,7 @@ class opencontrol(ControlSurface):
 
         """Modes switching"""
         self.pages = ['page_0', 'page_1', 'page_2']
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_layer_mode, self._mixer_mode, self._browser_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
         self._pages_0_1.add_mode(self.pages[0], active_layers)
         self._pages_0_1.add_mode(self.pages[1], active_layers, behaviour=CancellableBehaviour())
         self._page_2 = AddLayerMode(self._pages_0_1, self._pages_0_1.layer)
@@ -546,7 +568,7 @@ class opencontrol(ControlSurface):
                 Options.session_box_linked_to_selection = midi_bytes[7]
                 self.check_session_box()
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 24):
-            pages = {0: "None", 1: "Session", 2: "Arranger", 3: "Browser"}
+            pages = {0: "None", 1: "Session", 2: "Arranger", 3: "Track", 4:"Looper", 5:"Setlist"}
             rcvd = midi_bytes[6]
             self.linked_page[rcvd] = pages[midi_bytes[7]]
 

@@ -1,7 +1,3 @@
-# from builtins import zip
-# from builtins import str
-# from builtins import range
-import Live
 from _Framework.DeviceComponent import DeviceComponent as DeviceBase
 from _Framework.SubjectSlot import subject_slot
 from _Framework.InputControlElement import MIDI_CC_TYPE, MIDI_NOTE_TYPE
@@ -10,14 +6,15 @@ from _Framework.ButtonElement import ButtonElement
 MIDI_CHANNEL = 15
 state_color = {0: 122, 1: 127, 2: 126, 3: 125}
 
-# import logging, traceback
-# logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)
+import logging, traceback
+logger = logging.getLogger(__name__)
+def print(text):
+    logger.warning(text)
 
 class LooperComponent(DeviceBase):
 
-    def __init__(self, *a, **k):
+    def __init__(self, open_control, *a, **k):
+        self.open_control = open_control
         self._name_controls = None
         self.looper_state_button = None
         self.sel_prev_looper_button = None
@@ -128,6 +125,7 @@ class LooperComponent(DeviceBase):
     def sel_prev_looper_button_value(self, value):
         if value and self._active_looper_number != 0:
             self._active_looper_number = self.find_previous_looper_number()
+            self.open_control.update_view("Looper")
             self.update()
 
     def find_previous_looper_number(self):
@@ -155,6 +153,7 @@ class LooperComponent(DeviceBase):
     def sel_next_looper_button_value(self, value):
         if value and self._active_looper_number != 0:
             self._active_looper_number = self.find_next_looper_number()
+            self.open_control.update_view("Looper")
             self.update()
 
     def find_next_looper_number(self):
