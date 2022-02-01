@@ -121,8 +121,6 @@ class BrowserComponent(ControlSurfaceComponent):
             # self.current_index += 1
             self.show_target_name()
 
-
-
     @subject_slot('value')
     def select_prev_item_button_value(self, value):
         if value:
