@@ -8,28 +8,14 @@ state_color = {0: 122, 1: 127, 2: 126, 3: 125}
 
 class LooperComponent(DeviceBase):
 
-    def __init__(self, *a, **k):
-        # self._name_controls = None
-        # self.looper_state_button = None
-        # self.sel_prev_looper_button = None
-        # self.sel_next_looper_button = None
-        # self.sel_current_looper_button = None
-        # self.arm_looper_track_button = None
-        # self.mute_looper_track_button = None
-        # self.first_device_parameters = None
-        # self.set_stop_looper_button = None
-        # self.set_clear_all_button = None
+    def __init__(self, parent, *a, **k):
+        self.parent = parent
         self._color_buttons = [None, None]
         self._active_looper_number = 0
-        # self._6_looper_buttons = None
         super(LooperComponent, self).__init__(*a, **k)
         self.song().add_tracks_listener(self.build_loopers_list)
         self.song().view.add_selected_track_listener(self.on_selected_track_changed)
         self.build_loopers_list()
-
-    def set_name_controls(self, name):
-        self._name_controls = name
-        self.update()
 
     def set_looper_colors(self, buttons):
         self._color_buttons = buttons
@@ -215,7 +201,7 @@ class LooperComponent(DeviceBase):
 
     @subject_slot('name')
     def _on_device_name_changed(self):
-        if self.is_enabled() and self._name_controls and self._device:
+        if self.is_enabled() and self._device:
             if self._device.class_display_name == "Looper":
                 num = self._get_looper_number(self._device)
                 if num > -1:
@@ -253,19 +239,10 @@ class LooperComponent(DeviceBase):
 
     def _change_looper_buttons(self, num):
         if self.is_enabled() and num in list(self.looper_buttons_list.keys()):
-            # Receiving {240, 01, 19, 70, Layout Number, Button number, Note/CC Number, Type, Channel, 247} changes the corresponding button        
-            # Assign note num channel 11 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 11, 247))            
-            # Assign note num channel 12 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 12, 247))            
-            # Assign note num channel 13 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 13, 247))            
-            # Assign note num channel 14 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 14, 247))
-            # Assign note num channel 15 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 15, 247))
-            # Assign note num channel 16 
-            self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 16, 247))
+            # Receiving {240, 01, 19, 70, Layout Number, Button number, Note/CC Number, Type, Channel, 247} changes the corresponding button   
+            for i in range(6):
+                # Assign note num channel 11 + i
+                self.looper_buttons_list[num]._send_midi((240, 122, 29, 1, 19, 52, num+23, 0, 11 + i, 247))   
             self._looper_main_button_value.subject = self.looper_buttons_list[num]
 
     @subject_slot('value')
@@ -313,18 +290,6 @@ class LooperComponent(DeviceBase):
             new_name = new_name[:num1] + new_name[num2:]
         return new_name
 
-    def _send_sysex_for_name(self, name):       
-        _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 51, 2]
-        for i in range(_len):
-            if 0 <= ord(name[i])-32 <= 94:
-                message.append(ord(name[i])-32)
-            else:
-                message.append(95)
-        message.append(247)    
-        if self.is_enabled() and self._name_controls:     
-            self._name_controls._send_midi(tuple(message))
-
     def set_device(self, device):
         self._on_device_name_changed.subject = device
         super(LooperComponent, self).set_device(device)
@@ -336,6 +301,6 @@ class LooperComponent(DeviceBase):
         super(LooperComponent, self).update()
         self._looper_selected_changed()
         if self._active_looper_number == 0:
-            self._send_sysex_for_name("Add Looper")
+            self.parent.display_message("Looper Number", "Add Looper")
         else:
-            self._send_sysex_for_name("L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))
+            self.parent.display_message("Looper Number", "L%s " % str(self._active_looper_number) + self.remove_looper_from_name(self._active_looper_number))

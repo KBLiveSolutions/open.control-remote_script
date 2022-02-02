@@ -15,11 +15,17 @@
     # You should have received a copy of the GNU General Public License
     # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+""" 1.2.1 changelog:
+- fixed Scene name bug
+- added Groove Amount feedback
+- fixed stop all clips bug
 
+"""
 # coding: utf-8
 from __future__ import print_function
 from __future__ import absolute_import
-import Live  #
+import Live
+import time
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer
 from _Framework.SubjectSlot import subject_slot
@@ -40,7 +46,7 @@ from . import Options
 MIDI_CHANNEL = 15
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.2'
+SCRIPT_VER = 'v1.2.1'
 MAX_REQUESTS = 10
 prefix = (240, 122, 29, 1, 19)
 REQUEST_MSG = (240, 122, 29, 1, 19, 2, 247)
@@ -217,11 +223,12 @@ slider_actions = {
     "--- Custom ---": 0,
     "Custom MIDI": 122
   }
-display_actions =  {"Scene Name": 80,
-                    "Track Name": 81,
-                    "Looper Number": 82,
-                    "Variation Number": 83,
-                    "Left Marker Name": 84}
+display_actions =  {"Scene Name": 0,
+                    "Track Name": 1,
+                    "Looper Number": 2,
+                    "Variation Number": 3,
+                    "Left Marker Name": 4,
+                    "Setlist Song": 5}
 
 class opencontrol(ControlSurface):
 
@@ -235,16 +242,20 @@ class opencontrol(ControlSurface):
         self.quarter_lock = False
         self._skin = make_default_skin()
         self.linked_page = {0: "None", 1: "None", 2: "None"}
+        self.timer = Live.Base.Timer(callback=self.on_timer_reached, interval=150, repeat=False)
+        self.timer_running = False
+        self.last_message_time = time.time()
         """ calls all the functions to create the buttons and Components"""
         with self.component_guard():
             self._create_buttons()
-            self._session = SessionComponent( num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
+            self._session = SessionComponent(self, num_tracks=NUM_TRACKS, num_scenes=1, enable_skinning = True)
             self._mixer = MixerComponent(num_tracks=NUM_TRACKS)
+            self._mixer.set_parent(self)
             self._session.set_mixer(self._mixer)
-            self._transport = TransportComponent()
+            self._transport = TransportComponent(self)
             self._transport.set_session(self._session)
-            self._device = DeviceComponent(device_selection_follows_track_selection=True)
-            self._looper = LooperComponent(device_selection_follows_track_selection=False)
+            self._device = DeviceComponent(self, device_selection_follows_track_selection=True)
+            self._looper = LooperComponent(self, device_selection_follows_track_selection=False)
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
@@ -310,12 +321,11 @@ class opencontrol(ControlSurface):
 
 
         """Session Actions"""
-        self._session_layer_mode = AddLayerMode(self._session, Layer(scene_bank_up_button=self.buttons["Sel Prev Scene"],
+        self._session_layer_mode = AddLayerMode(self._session, Layer(launch_scene_button=self.buttons["Launch Scene"],
+                                                                    scene_bank_up_button=self.buttons["Sel Prev Scene"],
                                                                     scene_bank_down_button=self.buttons["Sel Next Scene"],
                                                                     scene_bank_up_x4_button=self.buttons["Jump 4 Scenes Up"],
                                                                     scene_bank_down_x4_button=self.buttons["Jump 4 Scenes Down"],
-                                                                    # scene_launch_buttons=self.scene_launch_buttons,
-                                                                    launch_scene_button=self.buttons["Launch Scene"],
                                                                     track_bank_left_button=self.buttons["Sel Prev Track"],
                                                                     track_bank_right_button=self.buttons["Sel Next Track"],
                                                                     find_next_empty_slot=self.buttons["Find Empty Slot"],
@@ -344,18 +354,16 @@ class opencontrol(ControlSurface):
                                                                     prev_setlist_song=self.buttons[ "Prev Setlist Song"],
                                                                     next_setlist_song=self.buttons["Next Setlist Song"],
                                                                     launch_setlist_song=self.buttons["Launch Setlist Song"],
-                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
-                                                                    refresh_setlist=self.buttons["Refresh Setlist"]
+                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"]
                                                                     ))
 
         """Transport Actions"""
-        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["Start/Stop"],
+        self._transport_mode = AddLayerMode(self._transport, Layer(continue_playing=self.buttons["Continue Playing"],
+                                                                    start_stop=self.buttons["Start/Stop"],
                                                                     loop_button=self.buttons["Arrangement Loop"],
                                                                     capture=self.buttons["Capture"],
-                                                                    continue_playing=self.buttons["Continue Playing"],
                                                                     loop_position=self.buttons["Loop Position"],
                                                                     loop_length=self.buttons["Loop Length"],
-                                                                    name_controls=self.buttons["Left Marker Name"],
                                                                     jump_to_start=self.buttons["Jump to 1.1.1"],
                                                                     restart_button=self.buttons["Restart From Last Position"],
                                                                     set_or_delete_cue_button=self.buttons["Add/Delete Marker"],
@@ -389,8 +397,7 @@ class opencontrol(ControlSurface):
                                                             send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
         """Devices Actions"""
-        self._device_layer_mode = AddLayerMode(self._device, Layer(name_controls = self.buttons["Variation Number"],
-                                                                    launch_variation_button=self.buttons["Launch Variation"],
+        self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
                                                                     prev_variation_button=self.buttons["Prev Variation"],
                                                                     next_variation_button=self.buttons["Next Variation"],
                                                                     next_device_button=self.buttons["Next Device"],
@@ -402,8 +409,7 @@ class opencontrol(ControlSurface):
                                                                     priority=1))
 
         """Looper Actions"""
-        self._looper_layer_mode = AddLayerMode(self._looper, Layer(name_controls = self.buttons["Looper Number"],
-                                                                    add_looper = self.buttons["+ Add Looper"],
+        self._looper_layer_mode = AddLayerMode(self._looper, Layer(add_looper = self.buttons["+ Add Looper"],
                                                                     sel_prev_looper=self.buttons["Prev Looper"],
                                                                     sel_next_looper=self.buttons["Next Looper"],
                                                                     arm_looper_track=self.buttons[ "Arm Looper Track"],
@@ -415,16 +421,16 @@ class opencontrol(ControlSurface):
                                                                     looper_buttons=self.looper_buttons
                                                                     ))
 
-        """Channel Strip Actions"""
-        self._channel_strip_layer_mode = AddLayerMode(self._mixer.channel_strip(0), Layer(
-                                                                                        name_controls=self.buttons["Track Name"]
-                                                                                        ))
+        # """Channel Strip Actions"""
+        # self._channel_strip_layer_mode = AddLayerMode(self._mixer.channel_strip(0), Layer(
+        #                                                                                 name_controls=self.buttons["Track Name"]
+        #                                                                                 ))
 
 
 
         """Modes switching"""
         self.pages = ['page_0', 'page_1', 'page_2']
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._channel_strip_layer_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode]
         self._pages_0_1.add_mode(self.pages[0], active_layers)
         self._pages_0_1.add_mode(self.pages[1], active_layers, behaviour=CancellableBehaviour())
         self._page_2 = AddLayerMode(self._pages_0_1, self._pages_0_1.layer)
@@ -437,7 +443,7 @@ class opencontrol(ControlSurface):
         self.set_prev_page_button(self.buttons["Prev Page"])
         self.set_next_page_button(self.buttons["Next Page"])
         # self.page_color_button = self.make_button(58, MIDI_CHANNEL, msg_type=MIDI_CC_TYPE)
-        self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
+        # self.page_color_button = ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, 58)
         self._pages_0_1.selected_mode = self.pages[0]
         self._pages_0_2.set_enabled(False)
         self._pages_0_1.set_enabled(True)
@@ -568,6 +574,45 @@ class opencontrol(ControlSurface):
             self.previous_quarter = quarter
             self.send_clock()
             self._transport.compare_cue()
+
+    def set_temp_message(self, name):
+        if not self.timer_running:
+            self.timer.start()
+            self.timer_running = True
+        else:
+            self.timer.restart()
+        self.temp_message = name
+        self.display_temp_message(name)
+
+    def on_timer_reached(self):
+        self.timer.stop()
+        self.timer_running = False
+        self.display_temp_message(self.temp_message)
+
+    def display_temp_message(self, name):
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 54, 3]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self.buttons["Left Marker Name"] is not None and time.time() - self.last_message_time > Options.display_time:
+            self.buttons["Left Marker Name"]._send_midi(tuple(message))
+            self.last_message_time = time.time()
+
+    def display_message(self, display_type, name):       
+        _len = min(len(name), 32)
+        message = [240, 122, 29, 1, 19, 51, display_actions[display_type]]
+        for i in range(_len):
+            if 0 <= ord(name[i])-32 <= 94:
+                message.append(ord(name[i])-32)
+            else:
+                message.append(95)
+        message.append(247)    
+        if self.buttons["Left Marker Name"]:     
+            self.buttons["Left Marker Name"]._send_midi(tuple(message))
 
         # """ FADE """  
         # quarter = self.song().get_current_beats_song_time().ticks%20

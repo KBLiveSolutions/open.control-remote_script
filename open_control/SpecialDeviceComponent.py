@@ -2,18 +2,12 @@ from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase
 from _Framework.SubjectSlot import subject_slot
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
 from . import Colors, Options
-import time
 import Live
 
 class DeviceComponent(DeviceComponentBase):
 
-    def __init__(self, *a, **k):
-        # self._name_controls = None
-        # self._prev_variation_button = None
-        # self._next_variation_button = None
-        # self.first_device_parameters = None
-        # self.selected_device_parameters = None
-        self.last_message_time = time.time()
+    def __init__(self, parent, *a, **k):
+        self.parent = parent
         super(DeviceComponent, self).__init__(*a, **k)
         self.selected_device_listener()
 
@@ -27,10 +21,6 @@ class DeviceComponent(DeviceComponentBase):
         else:
             track = self._mixer.channel_strip(0)._track
         return track
-
-    def set_name_controls(self, name):
-        self._name_controls = name
-        self.update()
 
 
     """ VARIATIONS """
@@ -121,7 +111,7 @@ class DeviceComponent(DeviceComponentBase):
                 name = "V" + str(self._device.selected_variation_index+1) +":"+ name
             else:
                 name = "XX " + name
-            self._send_sysex_for_name(name)      
+            self.parent.display_message("Variation Number", name)      
 
     def selected_device_listener(self):
         self.song().view.selected_track.view.add_selected_device_listener(self._update_name)
@@ -147,7 +137,7 @@ class DeviceComponent(DeviceComponentBase):
         self._device = self.song().view.selected_track.view.selected_device
         banks = parameter_banks(self._device) 
         parameter = banks[0][args[1]]
-        self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
+        self.parent.set_temp_message(parameter.str_for_value(parameter.value))
 
     def _scroll_device_view(self, direction):
         self.application().view.show_view(u'Detail')
@@ -165,32 +155,7 @@ class DeviceComponent(DeviceComponentBase):
     @subject_slot('name')
     def _on_device_name_changed(self):
         appointed_device = self.song().appointed_device
-        if self.is_enabled() and self._name_controls and appointed_device is not None:
+        if self.is_enabled() and appointed_device is not None:
             name = appointed_device.name
             if self.song().appointed_device.can_have_chains:
                 name = "v " + name
-
-    def _send_sysex_for_name(self, name):
-        _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 51, 3]
-        for i in range(_len):
-            if 0 <= ord(name[i])-32 <= 94:
-                message.append(ord(name[i])-32)
-            else:
-                message.append(95)
-        message.append(247)    
-        if self._name_controls:
-            self._name_controls._send_midi(tuple(message))
-
-    def _send_direct_sysex_for_name(self, name):
-        _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 54, 3]
-        for i in range(_len):
-            if 0 <= ord(name[i])-32 <= 94:
-                message.append(ord(name[i])-32)
-            else:
-                message.append(95)
-        message.append(247)    
-        if self._name_controls and time.time() - self.last_message_time > Options.display_time  :
-            self._name_controls._send_midi(tuple(message))
-            self.last_message_time = time.time()

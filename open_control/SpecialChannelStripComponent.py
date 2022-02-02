@@ -8,7 +8,7 @@ class ChannelStripComponent(ChannelStripBase):
         self.empty_color = 43
         super(ChannelStripComponent, self).__init__(*a, **k)
         self.is_private = True
-        self._name_controls = None
+        # self._name_controls = None
         self._mute_button_led = None
         self._arm_button_led = None
 
@@ -17,9 +17,9 @@ class ChannelStripComponent(ChannelStripBase):
         self._rgb_controls = None
         self._name_controls = None
 
-    def set_name_controls(self, name):
-        self._name_controls = name
-        self.update()
+    # def set_name_controls(self, name):
+    #     self._name_controls = name
+    #     self.update()
 
     def set_mute_button(self, button):
         self._mute_button_led = button
@@ -67,18 +67,18 @@ class ChannelStripComponent(ChannelStripBase):
         self._on_track_name_changed()
         self._on_arm_changed()
  
-    @subject_slot('name')
-    def _on_track_name_changed(self):
-        if self.is_enabled() and self._name_controls:
-            self._send_sysex_for_name(self._track.name if self._track else '')
+    # @subject_slot('name')
+    # def _on_track_name_changed(self):
+    #     if self.is_enabled() and self._name_controls:
+    #         self._send_sysex_for_name(self._track.name if self._track else '')
            
-    def _send_sysex_for_name(self, name):
-        _len = min(len(name), 32)
-        message = [240, 122, 29, 1, 19, 51, 1]
-        for i in range(_len):
-            if 0 <= ord(name[i])-32 <= 94:
-                message.append(ord(name[i])-32)
-            else:
-                message.append(95)
-        message.append(247)    
-        self._name_controls._send_midi(tuple(message))
+    # def _send_sysex_for_name(self, name):
+    #     _len = min(len(name), 32)
+    #     message = [240, 122, 29, 1, 19, 51, 1]
+    #     for i in range(_len):
+    #         if 0 <= ord(name[i])-32 <= 94:
+    #             message.append(ord(name[i])-32)
+    #         else:
+    #             message.append(95)
+    #     message.append(247)    
+    #     self._name_controls._send_midi(tuple(message))
