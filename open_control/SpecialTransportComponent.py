@@ -1,14 +1,8 @@
 import Live
-# from builtins import str
 from _Framework.TransportComponent import TransportComponent as TransportBase
 from _Framework.SubjectSlot import subject_slot
-from _Framework.ControlSurface import ControlSurface
 from . import Options
 import time
-# import logging, traceback
-# logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)
 
 class TransportComponent(TransportBase):
     def __init__(self, *a, **k):
@@ -45,10 +39,7 @@ class TransportComponent(TransportBase):
 
     def disconnect(self):
         super(TransportComponent, self).disconnect()
-    
-    # def _print(self, text):
-    #     logger.warning(text)
-        
+         
     def set_name_controls(self, name):
         self._name_controls = name
         self.update()
@@ -61,7 +52,6 @@ class TransportComponent(TransportBase):
     def set_restart_button(self, button):
         self._restart_button = button
         self._restart_button_value.subject = button
-
 
     def set_capture(self, button):
         self._capture_button = button
@@ -132,7 +122,6 @@ class TransportComponent(TransportBase):
     def set_metronome(self, button):
         self._metronome_button = button
         self._on_metronome_button.subject = button
-        # self.update()
 
     @subject_slot(u'value')
     def _on_metronome_button(self, value):
@@ -173,8 +162,6 @@ class TransportComponent(TransportBase):
                 pass
         self._loop_length_button.send_value(64, force=True)
 
-
-
     @subject_slot(u'value')
     def _on_loop_button(self, value):
         if value:
@@ -192,11 +179,9 @@ class TransportComponent(TransportBase):
             else:
                 self.song().continue_playing()
 
-
     def set_record_button(self, button):
         self._record_button = button
         self._on_record_button.subject = button
-        # self.update()
 
     @subject_slot(u'value')
     def _on_record_button(self, value):
@@ -270,7 +255,6 @@ class TransportComponent(TransportBase):
             if self.song().can_jump_to_next_cue:
                 self.song().jump_to_next_cue()
 
-
     def set_h_zoom(self, button):
         self._h_zoom_button = button
         self._on_h_zoom_changed.subject = button
@@ -282,7 +266,6 @@ class TransportComponent(TransportBase):
         if value > 64:
             self.application().view.zoom_view(3, "", True)
         self._h_zoom_button.send_value(64, force=True)
-
 
     def set_inc_dec_bpm_button(self, button):
         self._inc_dec_bpm_button = button
@@ -352,8 +335,6 @@ class TransportComponent(TransportBase):
         self._on_midi_recording_quantization_changed()
 
     def _setup_transport_listeners(self):
-        # self.song().add_current_song_time_listener(self.on_time_change)
-        # self._on_start_stop_changed.subject = self.song()
         self._on_loop_changed.subject = self.song()
         self._on_metronome_changed.subject = self.song()
         self._on_record_changed.subject = self.song()
@@ -365,9 +346,6 @@ class TransportComponent(TransportBase):
         self._on_back_to_arrangement_changed.subject = self.song()
         self._on_midi_recording_quantization_changed.subject = self.song()
         self._on_capture_changed.subject = self.song()
-
-        # self._on_can_jump_to_next_cue_changed.subject = self.song()
-        # self._on_can_jump_to_prev_cue_changed.subject = self.song()
 
     @subject_slot('can_capture_midi')
     def _on_capture_changed(self):
@@ -398,7 +376,6 @@ class TransportComponent(TransportBase):
     def _on_cue_points_changed(self): 
         self.compare_cue()
 
-    # @subject_slot('is_playing')
     def _on_start_stop_changed(self):
         if self.is_enabled() and self._start_stop_button and self._metronome_button:
             if self.song().is_playing:

@@ -1,57 +1,45 @@
 from __future__ import absolute_import
-# from builtins import str
-# from builtins import zip
-# from builtins import range
 from itertools import count
 
 import time
 
 from _Framework.SessionComponent import SessionComponent as SessionBase
 from _Framework.SubjectSlot import subject_slot_group, subject_slot
-# from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotBase
-# from _Framework.SceneComponent import SceneComponent as SceneBase
 from . import Colors, Options
-# from .SpecialSceneComponent import SceneComponent
-
-import logging, traceback
-logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)
 
 class SessionComponent(SessionBase):
     """ SessionComponent extends the standard to use a custom SceneComponent, use custom
     ring handling and observe the status of scenes. """
     # scene_component_type = SceneComponent
     def __init__(self, *a, **k):
-        self._clip_launch_button = None
+        # self._clip_launch_button = None
         self._launch_scene_button = None
-        self._launch_as_selected_button = None
         self._last_triggered_scene_index = None
-        self._last_launched_clip_index = None
-        self._next_empty_slot_button = None
-        self._scene_bank_up_button = None
-        self._scene_bank_down_button = None
+        # self._last_launched_clip_index = None
+        # self._next_empty_slot_button = None
+        # self._scene_bank_up_button = None
+        # self._scene_bank_down_button = None
         self._track_bank_left_button = None
         self._track_bank_right_button = None
-        self._stop_all_clips_button = None
-        self._name_controls = None
-        self._current_track_color = None
-        self._last_selected_parameter = None
-        self._stopped_clip_value = 0
-        self._clip_launch_buttons = None
-        self._unfold_track_button = None
-        self._main_view_toggle_button = None
-        self._detail_view_toggle_button = None
+        # self._stop_all_clips_button = None
+        # self._name_controls = None
+        # self._current_track_color = None
+        # self._last_selected_parameter = None
+        # self._stopped_clip_value = 0
+        # # self._clip_launch_buttons = None
+        # self._unfold_track_button = None
+        # self._main_view_toggle_button = None
+        # self._detail_view_toggle_button = None
         self._track_leds = [None, None, None]
         self._launch_setlist_song_button = None
-        self.last_parameter_button_changing = False
+        # self.last_parameter_button_changing = False
         self.selected_setlist_song = None
         self.playing_song = None
-        self.last_message_time = 0
-        self.view = None
+        self.last_message_time = time.time()
+        # self.view = None
         super(SessionComponent, self).__init__(*a, **k)
         self.selected_track = self.song().view.selected_track
-        self._show_highlight = True
+        # self._show_highlight = True
         self._setup_scene_listeners()
         self.application().view.add_focused_document_view_listener(self.on_view_changed)
         self.song().view.add_selected_parameter_listener(self.on_selected_parameter_changed)
@@ -240,13 +228,14 @@ class SessionComponent(SessionBase):
 
     def on_selected_parameter_changed(self):
         parameter = self.song().view.selected_parameter
-        self._last_selected_parameter_button.send_value(self.get_parameter_value(parameter, parameter.value), force=True)
-        self._on_last_selected_parameter_changed.subject = parameter
+        if parameter:
+            self._last_selected_parameter_button.send_value(self.get_parameter_value(parameter, parameter.value), force=True)
+        # self._on_last_selected_parameter_changed.subject = parameter
 
-    @subject_slot('value')
-    def _on_last_selected_parameter_changed(self):
-        if not self.last_parameter_button_changing:
-            parameter = self.song().view.selected_parameter
+    # @subject_slot('value')
+    # def _on_last_selected_parameter_changed(self):
+    #     if not self.last_parameter_button_changing:
+    #         parameter = self.song().view.selected_parameter
             # self.get_parameter_MIDI_value(parameter, parameter.value)
             # self._last_selected_parameter_button.send_value(self.get_parameter_MIDI_value(parameter, parameter.value), force=True)
 
@@ -317,7 +306,6 @@ class SessionComponent(SessionBase):
 
     @subject_slot('value')
     def _master_volume_button_value(self, value):
-        print(self.song().master_track.mixer_device.volume)
         self.song().master_track.mixer_device.volume = value/127
 
     def on_view_changed(self):
@@ -491,15 +479,17 @@ class SessionComponent(SessionBase):
 
     @subject_slot('name')
     def _on_scene_name_changed(self):
-        name = None
-        scene = self._song.scenes[self._scene_offset]
-        if self.is_enabled():
-            if self._scene_offset == self.song().view.selected_scene:
-                name = scene.name.strip()
-                if len(name) == 0:
-                    name = str(list(self._song.scenes).index(scene)+1)
-                self.send_sysex_for_name(0, name)
+        if self._song.scenes[self._scene_offset] == self.song().view.selected_scene:
+            self.display_scene_name()
         self.scan_setlist()
+
+    def display_scene_name(self):
+        scene = self._song.scenes[self._scene_offset]
+        name = scene.name.strip()
+        if len(name) == 0:
+            name = str(list(self._song.scenes).index(scene)+1)
+        self.send_sysex_for_name(0, name)
+        
 
     """ Various functions """
 
@@ -510,11 +500,11 @@ class SessionComponent(SessionBase):
 
     def _update_position_status_control(self, is_triggered=False):
         if self.is_enabled() and self._track_offset > -1 and self._scene_offset > -1:
-            self._do_show_highlight()
+            # self._do_show_highlight()
             self._on_scene_color_changed()
             self._on_track_color_changed()
             self._setup_scene_listeners()
-            self._on_scene_name_changed()
+            self.display_scene_name()
 
     def set_stopped_clip_value(self, value):
         self._stopped_clip_value = value
@@ -538,7 +528,7 @@ class SessionComponent(SessionBase):
         song.tracks[self._track_offset].stop_all_clips(Quantized=False)
         if not Options.session_box_linked_to_selection:
             self._scene_offset = scene_index
-            self._do_show_highlight()
+            # self._do_show_highlight()
         else:
             self.song().view.selected_scene = self._song.scenes[scene_index] 
 

@@ -1,13 +1,6 @@
-from itertools import count
-
 from _Framework.SubjectSlot import subject_slot_group, subject_slot
 from _Framework.ClipSlotComponent import ClipSlotComponent as ClipSlotBase
 from _Framework.Util import in_range, nop
-
-# import logging, traceback
-# logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)
 
 class ClipSlotComponent(ClipSlotBase):
     def __init__(self, *a, **k):

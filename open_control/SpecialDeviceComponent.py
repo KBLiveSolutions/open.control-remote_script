@@ -3,22 +3,17 @@ from _Framework.SubjectSlot import subject_slot
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
 from . import Colors, Options
 import time
-
 import Live
-# import logging, traceback
-# logger = logging.getLogger(__name__)
-# def print(text):
-#     logger.warning(text)
 
 class DeviceComponent(DeviceComponentBase):
 
     def __init__(self, *a, **k):
-        self._name_controls = None
-        self._prev_variation_button = None
-        self._next_variation_button = None
-        self.first_device_parameters = None
-        self.selected_device_parameters = None
-        self.last_message_time = 0
+        # self._name_controls = None
+        # self._prev_variation_button = None
+        # self._next_variation_button = None
+        # self.first_device_parameters = None
+        # self.selected_device_parameters = None
+        self.last_message_time = time.time()
         super(DeviceComponent, self).__init__(*a, **k)
         self.selected_device_listener()
 
@@ -153,36 +148,6 @@ class DeviceComponent(DeviceComponentBase):
         banks = parameter_banks(self._device) 
         parameter = banks[0][args[1]]
         self._send_direct_sysex_for_name(parameter.str_for_value(parameter.value))
-
- 
-    # def set_first_device_parameter(self, buttons):
-    #     self.first_device_parameters = buttons
-    #     if buttons:
-    #         self._on_first_device_parameter_changed.subject = buttons
-    
-    # def set_selected_device_parameters(self, buttons):
-    #     self.selected_device_parameters = buttons
-    #     if buttons:
-    #         self._on_selected_device_parameter_changed.subject = buttons
-
-    # @subject_slot('value')
-    # def _on_first_device_parameter_changed(self, *args):
-    #     banks = parameter_banks(self.selected_track.devices[0]) 
-    #     parameter = banks[0][args[1]]
-    #     _min = parameter.min
-    #     _max = parameter.max
-    #     parameter.value = self.scale(args[0], _min, _max)
-
-    # def scale(self, value, _min, _max):
-    #     return ((value * (_max - _min)) / 127) + _min
-
-    # @subject_slot('value')
-    # def _on_selected_device_parameter_changed(self, *args):
-    #     banks = parameter_banks(self.selected_track.view.selected_device) 
-    #     parameter = banks[0][args[1]]
-    #     _min = parameter.min
-    #     _max = parameter.max
-    #     parameter.value = self.scale(args[0], _min, _max)
 
     def _scroll_device_view(self, direction):
         self.application().view.show_view(u'Detail')
