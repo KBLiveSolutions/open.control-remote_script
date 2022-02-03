@@ -58,6 +58,7 @@ class LooperComponent(DeviceBase):
     def update(self):
         super(LooperComponent, self).update()
         if self._active_looper_number == 0:
+            self.clear_looper_leds()
             self.parent.display_message("Looper Number", "Add Looper")
         else:
             self._change_looper_buttons(self._active_looper_number)
@@ -96,6 +97,7 @@ class LooperComponent(DeviceBase):
         self._6_looper_buttons = buttons
         
     def looper_state_changed(self):
+        self.clear_looper_leds()
         for i in range(len(self.looper_list)):
             i = i+1
             if i < 5 and self.looper_list[i] is not None and self._6_looper_buttons is not None:
@@ -104,6 +106,13 @@ class LooperComponent(DeviceBase):
             if i is self._active_looper_number and self.looper_state_button:
                 looper_state = self.looper_list[self._active_looper_number].parameters[1].value
                 self.looper_state_button.send_value(state_color[looper_state], force=True)
+
+    def clear_looper_leds(self):
+        if self._6_looper_buttons is not None:
+            for i in range(6): 
+                self._6_looper_buttons[i-1].send_value(0, force=True)
+        if self.looper_state_button:
+            self.looper_state_button.send_value(0, force=True)
 
     # Stop Looper (inactive)
     def set_stop_looper(self, button):
@@ -166,8 +175,9 @@ class LooperComponent(DeviceBase):
                     self.check_chain(dev.chains)
                 else:
                     self.check_looper(dev)
-        if len(self.looper_list) > 0:
-            self._active_looper_number = max(self.looper_list)
+        temp = list(self.looper_list.keys())
+        if len(temp) > 0:
+            self._active_looper_number = max(temp)
             self.update()
 
     def check_looper(self, device):
@@ -200,6 +210,7 @@ class LooperComponent(DeviceBase):
             looper_instance.parameters[1].add_value_listener(self.looper_state_changed)
         except:
             pass
+        self.update()
 
     def on_selected_track_changed(self):
         if self.is_enabled():

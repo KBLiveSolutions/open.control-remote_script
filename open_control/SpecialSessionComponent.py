@@ -382,7 +382,7 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _track_bank_left_value(self, value):
         if value:
-            self.set_offsets(self.track_offset() - 1, self.scene_offset())
+            self.set_offsets(max(0, self._track_offset - 1), self.scene_offset())
             self.update_track_selection()
 
     # Select Next Track
@@ -394,7 +394,7 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _track_bank_right_value(self, value):
         if value:
-            self.set_offsets(self.track_offset() + 1, self.scene_offset())
+            self.set_offsets(min(self._track_offset + 1, len(self._song.visible_tracks)-1), self.scene_offset())
             self.update_track_selection()
 
     # Selected Track Listener
