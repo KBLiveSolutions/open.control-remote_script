@@ -11,30 +11,23 @@ class SessionComponent(SessionBase):
     def __init__(self, parent, *a, **k):
         self.parent = parent
         self._launch_scene_button = None
-        self._track_bank_left_button = None
-        self._track_bank_right_button = None
+        self._launch_setlist_song_button = None
+        self.selected_setlist_song = None
+        self.playing_song = None
         self._track_leds = [None, None, None]
         super(SessionComponent, self).__init__(*a, **k)
-        # self._setup_scene_listeners()
-        clip_color_table = Colors.LIVE_COLORS_TO_MIDI_VALUES.copy()
-        clip_color_table[16777215] = 119
-        self.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
-        # self.song().view.add_selected_parameter_listener(self.on_selected_parameter_changed)    
-        # self.scan_setlist()
-
-    # def disconnect(self):
-    #     super(SessionComponent, self).disconnect()
-    #     self._position_status_control = None
 
     def update(self):
         super(SessionComponent, self).update()
+        # self.set_offsets(self.track_offset(), self.scene_offset())
         self._update_scene_position()
         self.on_selected_scene_changed()
+        self.update_track_selection()
 
-    def _change_offsets(self, track_increment, scene_increment):
-        self._update_stop_clips_led(0)
-        super(SessionComponent, self)._change_offsets(track_increment, scene_increment)
-        self._update_scene_position()
+    # def _change_offsets(self, track_increment, scene_increment):
+    #     self._update_stop_clips_led(0)
+    #     super(SessionComponent, self)._change_offsets(track_increment, scene_increment)
+    #     # self._update_scene_position()
 
     # Detail View
     def set_detail_view_toggle(self, button):
@@ -131,87 +124,7 @@ class SessionComponent(SessionBase):
         _value =  (value - _min )/ (_max - _min)
         return _value * 127
 
-    # Select Scene Up
-    def set_scene_bank_up_button(self, button):
-        self._scene_bank_up_button = button
-        self._scene_bank_up_value.subject = button
-
-    @subject_slot('value')
-    def _scene_bank_up_value(self, value):
-        if value:
-            self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 1))
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
-
-    def set_scene_bank_up_x4_button(self, button):
-        self._scene_bank_up_x4_button = button
-        self._scene_bank_up_x4_value.subject = button
-
-    @subject_slot('value')
-    def _scene_bank_up_x4_value(self, value):
-        if value:
-            self.set_offsets(self.track_offset(), max(0, self.scene_offset() - 4))
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
-
-    # Select Scene Down
-    def set_scene_bank_down_button(self, button):
-        self._scene_bank_down_button = button
-        self._scene_bank_down_value.subject = button
-
-    @subject_slot('value')
-    def _scene_bank_down_value(self, value):
-        if value:
-            self.set_offsets(self.track_offset(), self.scene_offset() + 1)
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
-
-    def set_scene_bank_down_x4_button(self, button):
-        self._scene_bank_down_x4_button = button
-        self._scene_bank_down_x4_value.subject = button
-
-    @subject_slot('value')
-    def _scene_bank_down_x4_value(self, value):
-        if value:
-            self.set_offsets(self.track_offset(), self.scene_offset() + 4)
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
-
-    # Scroll Scenes
-    def set_scroll_scenes(self, button):
-        self._scroll_scenes_button = button
-        self._scroll_scenes_button_value.subject = button
-
-    @subject_slot('value')
-    def _scroll_scenes_button_value(self, value):
-        if value > 64:
-            self._scene_bank_down_value(1)
-        if value < 64:
-            self._scene_bank_up_value(1)
-        self._scroll_scenes_button.send_value(64, force=True)
-
-    def set_jump_to_playing_scene(self, button):
-        self._jump_to_playing_scene_button = button
-        self._jump_to_playing_scene_value.subject = button
-
-    @subject_slot('value')
-    def _jump_to_playing_scene_value(self, value):
-        if self.is_enabled():
-            if value is not 0:
-                self.set_offsets(self._track_offset, self._last_triggered_scene_index)
-                if Options.session_box_linked_to_selection:
-                    self.song().view.selected_scene = self.song().scenes[self._last_triggered_scene_index]
-
-    def _update_scene_position(self, is_triggered=False):
-        if self.is_enabled() and self._track_offset > -1 and self._scene_offset > -1:
-            # self._do_show_highlight()
-            self._on_scene_color_changed()
-            self._on_scene_triggered.replace_subjects(self._song.scenes, count())
-            self.display_scene_name()
-
-    def _update_track_position(self):
-            self._on_track_color_changed()
-            self.display_track_name()
+    """ SCENES """
 
     # Insert Scene
     def set_insert_scene(self, button):
@@ -250,6 +163,79 @@ class SessionComponent(SessionBase):
         if value:
             self.song().stop_all_clips()
 
+    # Select Scene Up
+    def set_scene_bank_up_button(self, button):
+        self._scene_bank_up_button = button
+        self._scene_bank_up_value.subject = button
+
+    @subject_slot('value')
+    def _scene_bank_up_value(self, value):
+        if value == 127: value = 1 
+        if value:
+            self.set_offsets(self.track_offset(), max(0, self.scene_offset() - value))
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
+            self._update_scene_position()
+
+    def set_scene_bank_up_x4_button(self, button):
+        self._scene_bank_up_x4_button = button
+        self._scene_bank_up_x4_value.subject = button
+
+    @subject_slot('value')
+    def _scene_bank_up_x4_value(self, value):
+        if value:
+            self._scene_bank_up_value(4)
+
+    # Select Scene Down
+    def set_scene_bank_down_button(self, button):
+        self._scene_bank_down_button = button
+        self._scene_bank_down_value.subject = button
+
+    @subject_slot('value')
+    def _scene_bank_down_value(self, value):
+        if value == 127: value = 1 
+        if value:
+            self.set_offsets(self.track_offset(), max(0, self.scene_offset() + value))
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[self.scene_offset()]
+            self._update_scene_position()
+
+    def set_scene_bank_down_x4_button(self, button):
+        self._scene_bank_down_x4_button = button
+        self._scene_bank_down_x4_value.subject = button
+
+    @subject_slot('value')
+    def _scene_bank_down_x4_value(self, value):
+        if value:
+            self._scene_bank_down_value(4)
+
+    # Scroll Scenes
+    def set_scroll_scenes(self, button):
+        self._scroll_scenes_button = button
+        self._scroll_scenes_button_value.subject = button
+
+    @subject_slot('value')
+    def _scroll_scenes_button_value(self, value):
+        if value > 64:
+            self._scene_bank_down_value(1)
+        if value < 64:
+            self._scene_bank_up_value(1)
+        self._scroll_scenes_button.send_value(64, force=True)
+
+    # Jump to Playing Scene
+    def set_jump_to_playing_scene(self, button):
+        self._jump_to_playing_scene_button = button
+        self._jump_to_playing_scene_value.subject = button
+
+    @subject_slot('value')
+    def _jump_to_playing_scene_value(self, value):
+        if self.is_enabled():
+            if value is not 0:
+                self.set_offsets(self._track_offset, self._last_triggered_scene_index)
+                if Options.session_box_linked_to_selection:
+                    self.song().view.selected_scene = self.song().scenes[self._last_triggered_scene_index]
+                self._update_scene_position()
+
     # Scene Launch
     def set_launch_scene_button(self, button):
         self._launch_scene_button = button
@@ -267,9 +253,17 @@ class SessionComponent(SessionBase):
     def _on_scene_triggered(self, index):
         self._last_triggered_scene_index = index    
         is_triggered = self._song.scenes[index].is_triggered
-        self._update_scene_position(is_triggered=is_triggered)
+        self._on_scene_color_changed()
+        # self._update_scene_position(is_triggered=is_triggered)
+        # self._on_scene_triggered.replace_subjects(self._song.scenes, count())
         if self.check_stop(self._song.scenes[index]) and is_triggered == 0:
             self._song.stop_playing()
+
+    def _update_scene_position(self, is_triggered=False):
+        if self.is_enabled() and self._track_offset > -1 and self._scene_offset > -1:
+            # self._do_show_highlight()
+            self._on_scene_color_changed()
+            self.display_scene_name()
 
     # Selected Scene Listener
     def on_scene_list_changed(self):
@@ -334,7 +328,15 @@ class SessionComponent(SessionBase):
             name = str(list(self._song.scenes).index(scene)+1)
         self.parent.display_message("Scene Name", name)
 
-    """ Track """
+    """ TRACK """
+
+    @property
+    def active_track(self):
+        if Options.session_box_linked_to_selection:
+            return self.selected_track 
+        else:
+            return self.song().visible_tracks[self.track_offset()]
+
     # Add Audio Track
     def set_add_audio_track(self, button):
         self._add_audio_track_button = button
@@ -364,10 +366,7 @@ class SessionComponent(SessionBase):
 
     @subject_slot('value')
     def _unfold_track_button_value(self, value):
-        if Options.session_box_linked_to_selection:
-            track = self.selected_track
-        else:
-            track = self.song().visible_tracks[self.track_offset()]
+        track = self.active_track
         if value:
             if track.is_foldable:
                 track.fold_state = not track.fold_state
@@ -383,7 +382,7 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _track_bank_left_value(self, value):
         if value:
-            self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
+            self.set_offsets(self.track_offset() - 1, self.scene_offset())
             self.update_track_selection()
 
     # Select Next Track
@@ -403,17 +402,26 @@ class SessionComponent(SessionBase):
         self.selected_track = self._song.view.selected_track
         self._on_track_color_changed.subject = self.song().view.selected_track
         self._on_track_name_changed.subject = self.song().view.selected_track
+        self._on_mute_changed.subject = self.song().view.selected_track
+        self._on_arm_changed.subject = self.song().view.selected_track
         if self.selected_track in self._song.visible_tracks and Options.session_box_linked_to_selection:
             self._track_offset = list(self._song.visible_tracks).index(self.selected_track)
-            if self._track_offset > -1 and self._scene_offset > -1:
-                self._mixer.set_track_offset(self._track_offset)
-                self._update_track_position()
+            if self._track_offset > -1: # and self._scene_offset > -1:
+                self.update_track_selection()
 
     def update_track_selection(self):
+        self._mixer.set_track_offset(self.track_offset())
         self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
         if Options.session_box_linked_to_selection:
             self._song.view.selected_track = self._song.tracks[self.track_offset()]
         self.display_track_name()
+        self._on_track_color_changed()
+        self._on_mute_changed()
+        self._on_arm_changed()
+
+    # def _update_track_position(self):
+    #         self._on_track_color_changed()
+    #         self.display_track_name()
 
     # Track Color
     def set_current_track_color(self, button):
@@ -447,12 +455,14 @@ class SessionComponent(SessionBase):
     def display_track_name(self):
         if self.is_enabled():
             self.parent.display_message("Track Name", self.song().tracks[self._track_offset].name)
-            # self._send_sysex_for_name(self._track.name if self._track else '')
            
     # Clip Launch/Stop
     def set_clip_launch_buttons(self, button):
         super(SessionComponent, self).set_clip_launch_buttons(button)
         self._clip_launch_buttons = button
+        clip_color_table = Colors.LIVE_COLORS_TO_MIDI_VALUES.copy()
+        clip_color_table[16777215] = 119
+        self.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
 
     def set_stopped_clip_value(self, value):
         self._stopped_clip_value = value
@@ -521,6 +531,79 @@ class SessionComponent(SessionBase):
         if value:
             self.song().trigger_session_record(32)
 
+    # Mute Track
+    def set_mute_button(self, button):
+        self._mute_button = button
+        self._mute_button_value.subject = button
+        
+    @subject_slot('value')
+    def _mute_button_value(self, value):
+        if value:
+            track = self.active_track
+            track.mute = 0 if track.mute == 1 else 1 
+            self._on_mute_changed()
+
+    @subject_slot('mute')
+    def _on_mute_changed(self):
+        track = self.active_track
+        if self.is_enabled() and self._mute_button != None:
+            color = 80
+            if track.mute == 1:
+                color = 81
+            self._mute_button.send_value(color, force=True)
+
+    # Arm Track
+    def set_arm_button(self, button):
+        self._arm_button = button
+        self._arm_button_value.subject = button
+        
+    @subject_slot('value')
+    def _arm_button_value(self, value):
+        if value:
+            track = self.active_track
+            track.arm = 0 if track.arm == 1 else 1 
+            self._on_arm_changed()
+
+    @subject_slot('arm')
+    def _on_arm_changed(self):
+        track = self.active_track
+        if self.is_enabled() and self._arm_button != None:
+            color = 0
+            if track.arm == 1:
+                color = 127
+            self._arm_button.send_value(color, force=True)
+
+    # Solo Track
+    def set_solo_button(self, button):
+        self._solo_button = button
+        self._solo_button_value.subject = button
+        
+    @subject_slot('value')
+    def _solo_button_value(self, value):
+        if value:
+            track = self.active_track
+            track.solo = 0 if track.solo == 1 else 1 
+            self._on_solo_changed()
+
+    @subject_slot('solo')
+    def _on_solo_changed(self):
+        track = self.active_track
+        if self.is_enabled() and self._solo_button != None:
+            color = 0
+            if track.solo == 1:
+                color = 23
+            self._solo_button.send_value(color, force=True)
+
+    # Stop Track
+    def set_stop_button(self, button):
+        self._stop_button = button
+        self._stop_button_value.subject = button
+        
+    @subject_slot('value')
+    def _stop_button_value(self, value):
+        if value:
+            self.active_track.stop_all_clips()
+
     """ Setlist"""
     
     # Select Prev Setlist Song
@@ -557,9 +640,6 @@ class SessionComponent(SessionBase):
     def set_launch_setlist_song(self, button):
         self._launch_setlist_song_button = button
         self._launch_setlist_song_button_value.subject = button
-        self._launch_setlist_song_button = None
-        self.selected_setlist_song = None
-        self.playing_song = None
         self.scan_setlist()
 
     def set_launch_setlist_song_noq(self, button):

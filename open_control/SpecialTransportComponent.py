@@ -6,6 +6,8 @@ from . import Options
 class TransportComponent(TransportBase):
     def __init__(self, parent, *a, **k):
         self.parent = parent
+        self.prev_cue = None
+        self.selected_cue = None
         super(TransportComponent, self).__init__(*a, **k)
 
     def set_session(self, session):
@@ -161,7 +163,7 @@ class TransportComponent(TransportBase):
 
     @subject_slot('metronome')
     def _on_metronome_changed(self):
-        if self.is_enabled():
+        if self.is_enabled() and self._metronome_button:
             channel = 15
             if self.song().metronome:
                 self.metro_color = 80
@@ -387,8 +389,6 @@ class TransportComponent(TransportBase):
         self._set_or_delete_cue_button = button
         self._on_set_or_delete_cue.subject = button
         self._on_cue_points_changed.subject = self.song()
-        self.prev_cue = None
-        self.selected_cue = None
         self._on_cue_points_changed()
         self.compare_cue()
 
@@ -485,9 +485,8 @@ class TransportComponent(TransportBase):
         return (res)
 
     def update(self):
-        super(TransportComponent, self).update()
-        self._on_metronome_changed()
         self._on_start_stop_changed()
+        self._on_metronome_changed()
         self._on_name_changed()
         self._on_loop_changed()
         self._on_record_changed()
@@ -496,3 +495,4 @@ class TransportComponent(TransportBase):
         self._on_punch_out_changed()
         self._on_back_to_arrangement_changed()
         self._on_midi_recording_quantization_changed()
+        super(TransportComponent, self).update()
