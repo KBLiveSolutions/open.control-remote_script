@@ -137,7 +137,7 @@ class TransportComponent(TransportBase):
     @subject_slot('value')
     def groove_amount_value(self, value):
         self.song().groove_amount = value/127*1.3
-        self.parent.set_temp_message(str(int(self.song().groove_amount*100+1))+ "%")
+        self.parent.set_temp_message(str(int(self.song().groove_amount*100))+ "%")
 
     # Jump to start
     def set_jump_to_start(self, button):
