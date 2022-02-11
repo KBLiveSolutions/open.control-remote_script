@@ -400,6 +400,9 @@ class TransportComponent(TransportBase):
     @subject_slot('cue_points')
     def _on_cue_points_changed(self): 
         self.compare_cue()
+        for cue_point in self.song().cue_points:
+            if not cue_point.name_has_listener(self._on_cue_name_changed):
+                cue_point.add_name_listener(self._on_cue_name_changed)
 
     def compare_cue(self):
         beat = int(self.song().current_song_time)
@@ -412,9 +415,9 @@ class TransportComponent(TransportBase):
         if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
             self.parent.display_message("Left Marker Name", self.selected_cue.name)
             if self.prev_cue:
-                self.prev_cue.remove_name_listener(self._on_name_changed)
+                self.prev_cue.remove_name_listener(self._on_prev_cue_name_changed)
             self.prev_cue = self.selected_cue
-            self.prev_cue.add_name_listener(self._on_name_changed)
+            self.prev_cue.add_name_listener(self._on_prev_cue_name_changed)
 
     # Next/Prev Marker
     def set_prev_next_cue_button(self, button):
@@ -464,7 +467,7 @@ class TransportComponent(TransportBase):
             self.song().loop_length = next_cue_time - self.prev_cue.time
     
     # Marker name
-    def _on_name_changed(self):
+    def _on_prev_cue_name_changed(self):
         if self.prev_cue:
             name = self.prev_cue.name
             if len(name) == 0:
@@ -472,6 +475,10 @@ class TransportComponent(TransportBase):
             self.parent.display_message("Left Marker Name", name)
         else:
             self.parent.display_message("Left Marker Name", "No Marker")
+        self._session.scan_setlist()
+
+    def _on_cue_name_changed(self):
+        print("name chgd")
         self._session.scan_setlist()
 
     def check_stop(self, name):
@@ -487,7 +494,7 @@ class TransportComponent(TransportBase):
     def update(self):
         self._on_start_stop_changed()
         self._on_metronome_changed()
-        self._on_name_changed()
+        self._on_prev_cue_name_changed()
         self._on_loop_changed()
         self._on_record_changed()
         self._on_session_record_changed()

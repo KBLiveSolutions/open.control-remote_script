@@ -15,10 +15,9 @@
     # You should have received a copy of the GNU General Public License
     # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-""" 1.2.1 changelog:
-- fixed Scene name bug
-- added Groove Amount feedback
-- fixed stop all clips bug
+""" 1.2.2 changelog:
+- added colors to Markers for SONGS
+- fixed (SONG) detection for arrangement markers
 
 """
 # coding: utf-8
@@ -43,10 +42,12 @@ from .LooperComponent import LooperComponent
 from .Skin import make_default_skin
 from . import Options
 
-MIDI_CHANNEL = 15
+
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.2.1'
+SCRIPT_VER = 'v1.2.2'
+
+MIDI_CHANNEL = 15
 MAX_REQUESTS = 10
 prefix = (240, 122, 29, 1, 19)
 REQUEST_MSG = (240, 122, 29, 1, 19, 2, 247)
@@ -493,9 +494,9 @@ class opencontrol(ControlSurface):
         """ If Handshake successful, call the update function for each Layout"""
         if midi_bytes == ACKNOWLEDGMENT_MSG:
             # self._session.scene(0)._on_scene_name_changed()
-            self._mixer.channel_strip(0)._on_track_name_changed()
+            # self._mixer.channel_strip(0)._on_track_name_changed()
             # self._device._on_device_name_changed()
-            self._transport._on_name_changed()
+            # self._transport._on_prev_cue_name_changed()
             self._session.update()
             self._mixer.update()
             self._transport.update()

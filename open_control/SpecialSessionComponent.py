@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from itertools import count
 from this import d
+import Live
 from _Framework.SessionComponent import SessionComponent as SessionBase
 from _Framework.SubjectSlot import subject_slot_group, subject_slot
 from . import Colors, Options
@@ -19,7 +20,6 @@ class SessionComponent(SessionBase):
 
     def update(self):
         super(SessionComponent, self).update()
-        # self.set_offsets(self.track_offset(), self.scene_offset())
         self._update_scene_position()
         self.on_selected_scene_changed()
         self.update_track_selection()
@@ -170,7 +170,8 @@ class SessionComponent(SessionBase):
 
     @subject_slot('value')
     def _scene_bank_up_value(self, value):
-        if value == 127: value = 1 
+        if value == 127: 
+            value = 1 
         if value:
             self.set_offsets(self.track_offset(), max(0, self.scene_offset() - value))
             if Options.session_box_linked_to_selection:
@@ -261,7 +262,6 @@ class SessionComponent(SessionBase):
 
     def _update_scene_position(self, is_triggered=False):
         if self.is_enabled() and self._track_offset > -1 and self._scene_offset > -1:
-            # self._do_show_highlight()
             self._on_scene_color_changed()
             self.display_scene_name()
 
@@ -410,14 +410,17 @@ class SessionComponent(SessionBase):
                 self.update_track_selection()
 
     def update_track_selection(self):
-        self._mixer.set_track_offset(self.track_offset())
-        self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
-        if Options.session_box_linked_to_selection:
-            self._song.view.selected_track = self._song.tracks[self.track_offset()]
-        self.display_track_name()
-        self._on_track_color_changed()
-        self._on_mute_changed()
-        self._on_arm_changed()
+        try:
+            self._mixer.set_track_offset(self.track_offset())
+            self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_track = self._song.tracks[self.track_offset()]
+            self.display_track_name()
+            self._on_track_color_changed()
+            self._on_mute_changed()
+            self._on_arm_changed()
+        except:
+            pass
 
     # def _update_track_position(self):
     #         self._on_track_color_changed()
@@ -490,7 +493,6 @@ class SessionComponent(SessionBase):
                 song.tracks[self._track_offset].stop_all_clips(Quantized=False)
                 if not Options.session_box_linked_to_selection:
                     self._scene_offset = scene_index
-                    # self._do_show_highlight()
                 else:
                     self.song().view.selected_scene = self._song.scenes[scene_index] 
 
@@ -569,7 +571,7 @@ class SessionComponent(SessionBase):
         track = self.active_track
         if self.is_enabled() and self._arm_button != None:
             color = 0
-            if track.arm == 1:
+            if track.arm == 1 and track.can_ce_armed:
                 color = 127
             self._arm_button.send_value(color, force=True)
 
@@ -654,28 +656,40 @@ class SessionComponent(SessionBase):
     @subject_slot('value')
     def _launch_setlist_song_noq_button_value(self, value):
         if value:
-            self.song().stop_playing()
-            self.launch_song()
+            # self.song().stop_playing()
+            self.launch_song(no_q = True)
 
-    def launch_song(self):
+    def launch_song(self, no_q = False):
             self.playing_song = self.setlist[self.selected_setlist_song]
             if self.playing_song in self.song().scenes:
+                if no_q:
+                    self.song().stop_playing()
                 self.playing_song.fire()
             elif self.playing_song in self.song().cue_points:
                 self.song().back_to_arranger = 0
+                self.song().re_enable_automation()
+                if no_q:
+                    quantization = self.song().clip_trigger_quantization
+                    self.song().clip_trigger_quantization = Live.Song.Quantization.q_no_q
+                    self.song().current_song_time = self.playing_song.time
+                    self.song().clip_trigger_quantization = quantization
                 self.playing_song.jump()
-                self.song().start_playing()
+                if not self.song().is_playing:
+                    self.song().start_playing()
+                    
+                # self.song().current_song_time = self.playing_song.time
+                # self.song().start_playing()
             self._on_setlist_song_color_changed()
 
     # Build Setlist
     def scan_setlist(self):
         self.setlist = {}
         for s in self.song().scenes:
-            number = self.find_song_in_name(s)
+            number = self.find_song_in_name(s.name)
             if number > -1 and number not in self.setlist:
                 self.setlist[number] = s
         for cue in self.song().cue_points:
-            number = self.find_song_in_name(cue)
+            number = self.find_song_in_name(cue.name)
             if number > -1 and number not in self.setlist:
                 self.setlist[number] = cue
         if len(self.sorted_setlist_keys) > 0:
@@ -687,8 +701,14 @@ class SessionComponent(SessionBase):
             self.parent.display_message("Setlist Song", "Add Songs")
 
     def select_scene_cuepoint(self):
-        if self.setlist[self.selected_setlist_song] in self.song().scenes:
-            self.song().view.selected_scene = self.setlist[self.selected_setlist_song]
+        song = self.setlist[self.selected_setlist_song]
+        if song in self.song().scenes:
+            scene_offset = int(list(self._song.scenes).index(song))
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[scene_offset]
+            self.set_offsets(self.track_offset(), scene_offset)
+        else:
+            self.parent._transport.selected_cue = song
 
     def _setlist_song_index(self):
         return self.sorted_setlist_keys.index(self.selected_setlist_song)
@@ -707,45 +727,49 @@ class SessionComponent(SessionBase):
                     ind = self._setlist_song_index() + index
                     if -1 < ind < len(self.sorted_setlist_keys):
                         song = self.setlist[self.sorted_setlist_keys[ind]]
+                        channel = 15
                         if song in self.song().scenes:
                             if song.color_index:
                                 color = song.color_index
-                                channel = 15
                             else:
                                 color = 124
-                                channel = 15
-                            # if self._last_triggered_scene_index is not None and self._last_triggered_scene_index == ind:
-                            #     color = 126
-                            #     channel = 14
-                            # if scene.is_triggered:
-                            #     color = 126
-                            #     channel = 13
                         else:
-                            color = 120
-                            channel = 15
-                        if self.playing_song is not None and song == self.playing_song:
-                            channel = 14
-
+                            color = self.find_color_in_name(song)
+                        # if self.playing_song is not None and song == self.playing_song:
+                            # channel = 14
                     else:
                         color = 0
                         channel = 15
                     button.send_value(color, force=True, channel=channel)
 
-    # Setlist Song Name
-    def find_song_in_name(self, item):
-        number = -1
-        num1 = item.name.find("(SONG")
+    def find_color_in_name(self, item):
+        color = 118
+        num1 = item.name.find("(COLOR")
         if num1 > -1:
-            num2 = item.name.find(")")
-            number = int(item.name[num1+5:num2])
+            num2 = item.name.find(")", num1)
+            color = int(item.name[num1+6:num2])
+        return color
+
+    # Setlist Song Name
+    def find_song_in_name(self, name):
+        number = -1
+        num1 = name.find("(SONG")
+        if num1 > -1:
+            num2 = name.find(")", num1)
+            number = int(name[num1+5:num2])
         return number
 
+    def remove_string_from_name(self, string_to_temove, name):
+        num1 = name.find("(" + string_to_temove)
+        if num1 > -1:
+            num2 = name.find(")", num1)
+            name = name[:num1] + name[num2+1:]
+        return name
+
     def show_song_name(self):
-        # if self.selected_setlist_song is not None:
-        new_name = self.setlist[self.selected_setlist_song].name
-        num1 = new_name.find("(SONG")
-        num2 = new_name.find(")", num1)
-        number = new_name[num1+5:num2]
-        new_name = new_name[:num1] + new_name[num2+1:]
-        self.parent.display_message("Setlist Song", "[" + number + "] " + new_name)
+        name = self.setlist[self.selected_setlist_song].name
+        self.parent.display_message("Setlist Song", "[" + str(self.find_song_in_name(name)) + "] " + self.remove_string_from_name("SONG", (self.remove_string_from_name("COLOR", name))))
+
+
+
 
