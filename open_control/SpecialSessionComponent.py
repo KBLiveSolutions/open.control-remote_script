@@ -608,6 +608,44 @@ class SessionComponent(SessionBase):
 
     """ Setlist"""
     
+    # Build Setlist
+    def scan_setlist(self):
+        self.setlist = {}
+        for s in self.song().scenes:
+            number = self.find_song_in_name(s.name)
+            if number > -1 and number not in self.setlist:
+                self.setlist[number] = s
+        for cue in self.song().cue_points:
+            number = self.find_song_in_name(cue.name)
+            if number > -1 and number not in self.setlist:
+                self.setlist[number] = cue
+        if len(self.sorted_setlist_keys) > 0:
+            if self.selected_setlist_song is None:
+                self.selected_setlist_song = self.sorted_setlist_keys[0]
+            self.show_song_name()
+            self._on_setlist_song_color_changed()
+        else:
+            self.parent.display_message("Setlist Song", "Add Songs")
+
+    def select_scene_cuepoint(self):
+        song = self.setlist[self.selected_setlist_song]
+        if song in self.song().scenes:
+            scene_offset = int(list(self._song.scenes).index(song))
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_scene = self._song.scenes[scene_offset]
+            self.set_offsets(self.track_offset(), scene_offset)
+            self.application().view.focus_view("Session")
+        else:
+            self.parent._transport.selected_cue = song
+            self.application().view.focus_view("Arranger")
+
+    def _setlist_song_index(self):
+        return self.sorted_setlist_keys.index(self.selected_setlist_song)
+
+    @property
+    def sorted_setlist_keys(self):
+        return sorted(list(self.setlist.keys()))
+
     # Select Prev Setlist Song
     def set_prev_setlist_song(self, button):
         self._prev_setlist_song_button = button
@@ -660,62 +698,30 @@ class SessionComponent(SessionBase):
             self.launch_song(no_q = True)
 
     def launch_song(self, no_q = False):
-            self.playing_song = self.setlist[self.selected_setlist_song]
-            if self.playing_song in self.song().scenes:
-                if no_q:
-                    self.song().stop_playing()
+        self.timer = Live.Base.Timer(callback=self.on_timer_reached, interval=20, repeat=False)
+        self.playing_song = self.setlist[self.selected_setlist_song]
+        if self.playing_song in self.song().scenes:
+            if no_q:
+                self.song().stop_playing()
+                self.timer.start()
+            else:
                 self.playing_song.fire()
-            elif self.playing_song in self.song().cue_points:
-                self.song().back_to_arranger = 0
-                self.song().re_enable_automation()
-                if no_q:
-                    quantization = self.song().clip_trigger_quantization
-                    self.song().clip_trigger_quantization = Live.Song.Quantization.q_no_q
-                    self.song().current_song_time = self.playing_song.time
-                    self.song().clip_trigger_quantization = quantization
-                self.playing_song.jump()
-                if not self.song().is_playing:
-                    self.song().start_playing()
-                    
-                # self.song().current_song_time = self.playing_song.time
-                # self.song().start_playing()
-            self._on_setlist_song_color_changed()
+        elif self.playing_song in self.song().cue_points:
+            if no_q:
+                quantization = self.song().clip_trigger_quantization
+                self.song().clip_trigger_quantization = Live.Song.Quantization.q_no_q
+                self.song().current_song_time = self.playing_song.time
+                self.song().clip_trigger_quantization = quantization
+            self.playing_song.jump()
+            self.song().back_to_arranger = 0
+            self.song().re_enable_automation()
+            if not self.song().is_playing:
+                self.song().start_playing()
+        self._on_setlist_song_color_changed()
 
-    # Build Setlist
-    def scan_setlist(self):
-        self.setlist = {}
-        for s in self.song().scenes:
-            number = self.find_song_in_name(s.name)
-            if number > -1 and number not in self.setlist:
-                self.setlist[number] = s
-        for cue in self.song().cue_points:
-            number = self.find_song_in_name(cue.name)
-            if number > -1 and number not in self.setlist:
-                self.setlist[number] = cue
-        if len(self.sorted_setlist_keys) > 0:
-            if self.selected_setlist_song is None:
-                self.selected_setlist_song = self.sorted_setlist_keys[0]
-            self.show_song_name()
-            self._on_setlist_song_color_changed()
-        else:
-            self.parent.display_message("Setlist Song", "Add Songs")
-
-    def select_scene_cuepoint(self):
-        song = self.setlist[self.selected_setlist_song]
-        if song in self.song().scenes:
-            scene_offset = int(list(self._song.scenes).index(song))
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_scene = self._song.scenes[scene_offset]
-            self.set_offsets(self.track_offset(), scene_offset)
-        else:
-            self.parent._transport.selected_cue = song
-
-    def _setlist_song_index(self):
-        return self.sorted_setlist_keys.index(self.selected_setlist_song)
-
-    @property
-    def sorted_setlist_keys(self):
-        return sorted(list(self.setlist.keys()))
+    def on_timer_reached(self):
+        self.timer.stop()
+        self.playing_song.fire()
 
     # Setlist Song Color
     @subject_slot('color')

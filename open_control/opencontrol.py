@@ -15,11 +15,7 @@
     # You should have received a copy of the GNU General Public License
     # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-""" 1.2.2 changelog:
-- added colors to Markers for SONGS
-- fixed (SONG) detection for arrangement markers
 
-"""
 # coding: utf-8
 from __future__ import print_function
 from __future__ import absolute_import
@@ -42,10 +38,13 @@ from .LooperComponent import LooperComponent
 from .Skin import make_default_skin
 from . import Options
 
-
+""" v1.2.3 changelog:
+- fixed setlist launch issues
+- basic browser implementation
+"""
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.2.2'
+SCRIPT_VER = 'v1.2.3'
 
 MIDI_CHANNEL = 15
 MAX_REQUESTS = 10
@@ -146,6 +145,9 @@ button_actions = {
     "Store Variation": 70,
     "Recall Last Used": 72, 
     "Randomize Macros": 71,
+    "--- Browser ---": 0,
+    "Hotswap": 52,
+    "Load Next": 58,
     "--- Pages ---": 0,
     "Page 1/2": 50,
     "Page 1/3": 51,
@@ -391,6 +393,8 @@ class opencontrol(ControlSurface):
                                                                     recall_variation_button=self.buttons["Recall Last Used"],
                                                                     randomize_macros_button=self.buttons["Randomize Macros"],
                                                                     selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
+                                                                    hotswap=self.buttons["Hotswap"],
+                                                                    load_next=self.buttons["Load Next"],
                                                                     priority=1))
 
         """Looper Actions"""
@@ -471,7 +475,7 @@ class opencontrol(ControlSurface):
             self.enable_page()
     
     def enable_page(self):
-        self.show_message('Page %s' % str(self.current_page+1))
+        # self.show_message('Page %s' % str(self.current_page+1))
         self._send_midi((240, 122, 29, 247))
         self._send_midi((240, 122, 29, 1, 19, 40, self.current_page, 247))
         self.update_pages()

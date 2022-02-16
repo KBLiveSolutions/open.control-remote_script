@@ -22,6 +22,32 @@ class DeviceComponent(DeviceComponentBase):
             track = self._mixer.channel_strip(0)._track
         return track
 
+    """ BROWSER"""
+
+    #Hotswap
+    def set_hotswap(self, button):
+        self._hotswap_button = button
+        self._on_hotswap.subject = button
+
+    @subject_slot(u'value')
+    def _on_hotswap(self, value):
+        if value:
+            self.application().view.toggle_browse()
+            print("hot")
+
+    #Load Next
+    def set_load_next(self, button):
+        self._load_next_button = button
+        self._on_load_next.subject = button
+
+    @subject_slot(u'value')
+    def _on_load_next(self, value):
+        if value:
+            self.application().browser.load_item()
+
+    def get_selected_browser_itm(self):
+        
+
 
     """ VARIATIONS """
 
