@@ -147,7 +147,9 @@ button_actions = {
     "Randomize Macros": 71,
     "--- Browser ---": 0,
     "Hotswap": 52,
+    "Load Prev": 12,
     "Load Next": 58,
+    "Load Item": 92,
     "--- Pages ---": 0,
     "Page 1/2": 50,
     "Page 1/3": 51,
@@ -223,6 +225,8 @@ slider_actions = {
     # "Device 1 Param 2": 93,
     # "Device 1 Param 3": 94,
     # "Device 1 Param 4": 95,
+    "--- Browser ---": 0,
+    "Prev/Next Item": 46,
     "--- Custom ---": 0,
     "Custom MIDI": 122
   }
@@ -231,7 +235,8 @@ display_actions =  {"Scene Name": 0,
                     "Looper Number": 2,
                     "Variation Number": 3,
                     "Left Marker Name": 4,
-                    "Setlist Song": 5}
+                    "Setlist Song": 5,
+                    "Browser": 6}
 
 class opencontrol(ControlSurface):
 
@@ -394,7 +399,10 @@ class opencontrol(ControlSurface):
                                                                     randomize_macros_button=self.buttons["Randomize Macros"],
                                                                     selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
                                                                     hotswap=self.buttons["Hotswap"],
+                                                                    load_prev=self.buttons["Load Prev"],
                                                                     load_next=self.buttons["Load Next"],
+                                                                    prev_next_item=self.buttons["Prev/Next Item"],
+                                                                    load_item=self.buttons["Load Item"],
                                                                     priority=1))
 
         """Looper Actions"""
