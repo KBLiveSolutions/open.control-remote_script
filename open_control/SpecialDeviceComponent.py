@@ -13,8 +13,7 @@ class DeviceComponent(DeviceComponentBase):
         self.selected_device_listener()
         self.browser = self.application().browser
         self.application().view.add_browse_mode_listener(self.on_hotswap_changed)
-        self.browser_categories = [self.browser.audio_effects, self.browser.instruments, self.browser.packs, self.browser.drums, self.browser.midi_effects
-                                    , self.browser.max_for_live, self.browser.plugins, self.browser.user_library, self.browser.current_project, self.browser.sounds]
+        self.browser_categories = [self.browser.audio_effects] #, self.browser.instruments, self.browser.packs, self.browser.drums, self.browser.midi_effects , self.browser.max_for_live, self.browser.plugins, self.browser.user_library, self.browser.current_project, self.browser.sounds]
 
     def set_mixer(self, mixer):
         self._mixer = mixer
@@ -80,17 +79,45 @@ class DeviceComponent(DeviceComponentBase):
     def _on_prev_next_item(self, value):
         if value > 64:
             self.select_item('Next')
+            direction = self.application().view.NavDirection.down
+            self.application().view.scroll_view(direction, u'Browser', False)
         if value < 64:
             self.select_item('Prev')
+            direction = self.application().view.NavDirection.up
+            self.application().view.scroll_view(direction, u'Browser', False)
         self._prev_next_item_button.send_value(64, force=True)
 
     def select_item(self, direction):
         if direction == "Next":
-            self.device_index += 1
+            self.item_index += 1
         else:
-            self.device_index -= 1
-        self.selected_item = self.list_children[self.device_index]
+            self.item_index -= 1
+        self.selected_item = self.browser_items[self.item_index]
         self.display_item_name()
+
+        # if self.item_index < 0 or self.item_index > len(self.list_children):
+        #     self.get_parent_folder(self.selected_item)
+
+    def get_parent_folder(self, item):
+        hierarchy_up = self.browser_hierarchy[len(self.browser_hierarchy)-1]
+        self.selected_item = hierarchy_up[1]
+        self.list_children = hierarchy_up[0].children
+        print(self.browser_hierarchy)
+        for i, sel in zip(range(len(self.list_children)), self.list_children):
+            if sel.uri == self.selected_item.uri:
+                print([sel.name, i])
+                self.item_index = i
+            # self.selected_item = self.browser_hierarchy[len(self.browser_hierarchy)-1]
+            # for item in self.browser_categories:
+            #     self.get_item_position(item, self.selected_item)
+
+    # def get_item_position(self, item):
+
+    #         for i, sel in zip(range(len(self.list_children)), self.list_children):
+    #             if sel.uri == self.browser_hierarchy[len(self.browser_hierarchy)]:
+    #                 self.item_index = i
+    #                 print(self.browser_hierarchy[len(self.browser_hierarchy)])
+    #                 print(self.item_index)
 
     # Load Item
     def set_load_item(self, button):
@@ -100,28 +127,75 @@ class DeviceComponent(DeviceComponentBase):
     @subject_slot(u'value')
     def load_selected_item(self, value):
         if value:
-            self.browser.load_item(self.selected_item)
+            if len(list(self.selected_item.children)) > 0:
+                self.open_folder(1)
+            else:
+                self.browser.load_item(self.selected_item)
+
+    # Open Folder
+    def set_open_folder(self, button):
+        self._open_folder_button = button
+        self.open_folder.subject = button
+
+    @subject_slot(u'value')
+    def open_folder(self, value):
+        if value:
+            direction = self.application().view.NavDirection.right
+            self.application().view.scroll_view(direction, u'Browser', False)
+            self.refesh_browser()
+
+    # Close Folder
+    def set_close_folder(self, button):
+        self._close_folder_button = button
+        self.close_folder.subject = button
+
+    @subject_slot(u'value')
+    def close_folder(self, value):
+        if value:
+            direction = self.application().view.NavDirection.left
+            self.application().view.scroll_view(direction, u'Browser', False)
+            self.refesh_browser()
+
+    # Get selected item
+    def refesh_browser(self):
+        inserted_folder = list(self.browser_items[self.item_index].children)
+        self.previous_folder_index = self.get_item_index(self.browser_items, self.previous_folder)
+        # for i, sel in zip(range(len(self.browser_items)), self.browser_items):
+        #     if sel.uri == self.previous_folder.uri:
+        #         self.previous_folder_index = i
+        pop_start = self.previous_folder_index + 1
+        pop_end = self.previous_folder_index + len(list(self.previous_folder.children)) + 1
+        self.browser_items = self.browser_items[0:pop_start] + self.browser_items[pop_end:]
+        ins_start = self.item_index + 1
+        ins_end = self.item_index + len(inserted_folder) + 1
+        self.browser_items = self.browser_items[0:ins_start] + inserted_folder + self.browser_items[ins_end:]
+
+    def get_item_index(self, _list, item):
+        for i, sel in zip(range(len(_list)), _list):
+            if sel.uri == item.uri:
+                index = i
+        return index
 
     # Get selected item
     def get_selected_browser_item(self):
+        self.browser_items = []
         for item in self.browser_categories:
-            print(item)
             self.get_item_index(item)
-            self.selected_item = self.list_children[self.device_index]
+        for i, sel in zip(range(len(self.browser_items)), self.browser_items):
+            if sel.uri == self.selected_item.uri:
+                self.item_index = i
 
     def get_item_index(self, item):
         for sub_item in item.children:
+            self.browser_items.append(sub_item)
             if self.browser.relation_to_hotswap_target(sub_item) == Live.Browser.Relation.ancestor:
                 self.get_item_index(sub_item)
             elif self.browser.relation_to_hotswap_target(sub_item) == Live.Browser.Relation.equal:
+                self.previous_folder = item
                 list_children = list(item.iter_children)
-                for i, sel in zip(range(len(list_children)), list_children):
+                for sel in list_children:
                     if sel.uri == sub_item.uri:
-                        self.list_children = list_children
-                        self.device_index = i
-                        # self.selected_item = self.list_children[self.device_index]
-                        print(sub_item)
-                        print("found")
+                        self.selected_item = sel
 
     # Display Item Name
     def display_item_name(self):

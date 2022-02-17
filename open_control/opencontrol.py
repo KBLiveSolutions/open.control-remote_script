@@ -150,6 +150,8 @@ button_actions = {
     "Load Prev": 12,
     "Load Next": 58,
     "Load Item": 92,
+    "Open Folder": 93,
+    "Close Folder": 94,
     "--- Pages ---": 0,
     "Page 1/2": 50,
     "Page 1/3": 51,
@@ -403,6 +405,8 @@ class opencontrol(ControlSurface):
                                                                     load_next=self.buttons["Load Next"],
                                                                     prev_next_item=self.buttons["Prev/Next Item"],
                                                                     load_item=self.buttons["Load Item"],
+                                                                    open_folder=self.buttons["Open Folder"],
+                                                                    close_folder=self.buttons["Close Folder"],
                                                                     priority=1))
 
         """Looper Actions"""
