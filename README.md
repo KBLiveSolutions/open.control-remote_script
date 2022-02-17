@@ -10,5 +10,3 @@ On versions 10.1.3 and above :
 * copy the folder open_control in the repository and paste it inside the Remote Scripts folder.
 * Relaunch Live
 a Control Surface named open control should be available.
-
-## The script is not yet documented. Comments will be added soon.
