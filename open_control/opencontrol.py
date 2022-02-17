@@ -29,12 +29,14 @@ from _Framework.ModesComponent import ModesComponent, AddLayerMode
 
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.ButtonElement import ButtonElement
+from open_control.BrowserComponent import BrowserComponent
 
 from .SpecialSessionComponent import SessionComponent
 from .SpecialMixerComponent import MixerComponent
 from .SpecialTransportComponent import TransportComponent
 from .SpecialDeviceComponent import DeviceComponent
 from .LooperComponent import LooperComponent
+from .BrowserComponent import BrowserComponent
 from .Skin import make_default_skin
 from . import Options
 
@@ -266,6 +268,7 @@ class opencontrol(ControlSurface):
             self._transport.set_session(self._session)
             self._device = DeviceComponent(self, device_selection_follows_track_selection=True)
             self._looper = LooperComponent(self, device_selection_follows_track_selection=False)
+            self._browser = BrowserComponent(self)
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
@@ -317,7 +320,7 @@ class opencontrol(ControlSurface):
         self._pages = ModesComponent(name='pages_0_1', is_enabled=False)
 
         """Session Actions"""
-        self._session_layer_mode = AddLayerMode(self._session, Layer(launch_scene_button=self.buttons["Launch Scene"],
+        self._session_mode = AddLayerMode(self._session, Layer(launch_scene_button=self.buttons["Launch Scene"],
                                                                     scene_bank_up_button=self.buttons["Sel Prev Scene"],
                                                                     scene_bank_down_button=self.buttons["Sel Next Scene"],
                                                                     scene_bank_up_x4_button=self.buttons["Jump 4 Scenes Up"],
@@ -391,7 +394,7 @@ class opencontrol(ControlSurface):
                                                             send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
         """Devices Actions"""
-        self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
+        self._device_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
                                                                     prev_variation_button=self.buttons["Prev Variation"],
                                                                     next_variation_button=self.buttons["Next Variation"],
                                                                     next_device_button=self.buttons["Next Device"],
@@ -400,17 +403,21 @@ class opencontrol(ControlSurface):
                                                                     recall_variation_button=self.buttons["Recall Last Used"],
                                                                     randomize_macros_button=self.buttons["Randomize Macros"],
                                                                     selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
+
+                                                                    priority=1))
+
+        """ Browser """
+        self._browser_mode = AddLayerMode(self._browser, Layer(
                                                                     hotswap=self.buttons["Hotswap"],
                                                                     load_prev=self.buttons["Load Prev"],
                                                                     load_next=self.buttons["Load Next"],
                                                                     prev_next_item=self.buttons["Prev/Next Item"],
                                                                     load_item=self.buttons["Load Item"],
                                                                     open_folder=self.buttons["Open Folder"],
-                                                                    close_folder=self.buttons["Close Folder"],
-                                                                    priority=1))
+                                                                    close_folder=self.buttons["Close Folder"]))
 
         """Looper Actions"""
-        self._looper_layer_mode = AddLayerMode(self._looper, Layer(add_looper = self.buttons["+ Add Looper"],
+        self._looper_mode = AddLayerMode(self._looper, Layer(add_looper = self.buttons["+ Add Looper"],
                                                                     sel_prev_looper=self.buttons["Prev Looper"],
                                                                     sel_next_looper=self.buttons["Next Looper"],
                                                                     arm_looper_track=self.buttons[ "Arm Looper Track"],
@@ -427,7 +434,7 @@ class opencontrol(ControlSurface):
         self.pages = 'page_0'
         self.current_page = 0
 
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_mode, self._mixer_mode, self._transport_mode, self._device_mode, self._looper_mode, self._browser_mode]
         self._pages.add_mode(self.pages, active_layers)
         self.set_page_0_1_button(self.buttons["Page 1/2"])
         self.set_page_0_2_button(self.buttons["Page 1/3"])
