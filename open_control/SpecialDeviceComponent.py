@@ -160,15 +160,12 @@ class DeviceComponent(DeviceComponentBase):
     def refesh_browser(self):
         inserted_folder = list(self.browser_items[self.item_index].children)
         self.previous_folder_index = self.get_item_index(self.browser_items, self.previous_folder)
-        # for i, sel in zip(range(len(self.browser_items)), self.browser_items):
-        #     if sel.uri == self.previous_folder.uri:
-        #         self.previous_folder_index = i
         pop_start = self.previous_folder_index + 1
         pop_end = self.previous_folder_index + len(list(self.previous_folder.children)) + 1
         self.browser_items = self.browser_items[0:pop_start] + self.browser_items[pop_end:]
-        ins_start = self.item_index + 1
-        ins_end = self.item_index + len(inserted_folder) + 1
-        self.browser_items = self.browser_items[0:ins_start] + inserted_folder + self.browser_items[ins_end:]
+        insert_index = self.item_index + 1
+        self.browser_items = self.browser_items[0:insert_index] + inserted_folder + self.browser_items[insert_index:]
+        print(self.browser_items)
 
     def get_item_index(self, _list, item):
         for i, sel in zip(range(len(_list)), _list):
@@ -180,16 +177,16 @@ class DeviceComponent(DeviceComponentBase):
     def get_selected_browser_item(self):
         self.browser_items = []
         for item in self.browser_categories:
-            self.get_item_index(item)
+            self.get_hotswap_index(item)
         for i, sel in zip(range(len(self.browser_items)), self.browser_items):
             if sel.uri == self.selected_item.uri:
                 self.item_index = i
 
-    def get_item_index(self, item):
+    def get_hotswap_index(self, item):
         for sub_item in item.children:
             self.browser_items.append(sub_item)
             if self.browser.relation_to_hotswap_target(sub_item) == Live.Browser.Relation.ancestor:
-                self.get_item_index(sub_item)
+                self.get_hotswap_index(sub_item)
             elif self.browser.relation_to_hotswap_target(sub_item) == Live.Browser.Relation.equal:
                 self.previous_folder = item
                 list_children = list(item.iter_children)
