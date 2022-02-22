@@ -39,6 +39,7 @@ from .SpecialMixerComponent import MixerComponent
 from .SpecialTransportComponent import TransportComponent
 from .SpecialDeviceComponent import DeviceComponent
 from .LooperComponent import LooperComponent
+from .ActionsComponent import ActionsComponent
 from .Skin import make_default_skin
 from . import Options
 
@@ -257,6 +258,7 @@ class opencontrol(ControlSurface):
             self._transport.set_session(self._session)
             self._device = DeviceComponent(self, device_selection_follows_track_selection=True)
             self._looper = LooperComponent(self, device_selection_follows_track_selection=False)
+            self._custom = ActionsComponent(self)
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
@@ -299,6 +301,8 @@ class opencontrol(ControlSurface):
         self.looper_buttons = ButtonMatrixElement(rows=[[self.buttons["State (LOOPER1)"], self.buttons["State (LOOPER2)"], self.buttons["State (LOOPER3)"],
                                                 self.buttons["State (LOOPER4)"], self.buttons["State (LOOPER5)"], self.buttons["State (LOOPER6)"]]])
         self.clip_launch_buttons = ButtonMatrixElement(rows=[clip_launch_row])
+
+        self.custom_buttons = ButtonMatrixElement(rows=[[self.make_button(cc_number, 14, msg_type=MIDI_CC_TYPE, name=cc_number) for cc_number in range(20)]])
 
     def make_button(self, identifier, channel, name, msg_type = MIDI_CC_TYPE, skin = None, is_modifier = False):
         return ButtonElement(True, msg_type, channel, identifier, skin=self._skin, name=name, resource_type=PrioritizedResource if is_modifier else None)
@@ -406,12 +410,14 @@ class opencontrol(ControlSurface):
                                                                     looper_buttons=self.looper_buttons
                                                                     ))
 
+        """Custom Actions"""
+        self._custom_mode = AddLayerMode(self._custom, Layer(custom_buttons = self.custom_buttons))
 
         """ Pages switching """
         self.pages = 'page_0'
         self.current_page = 0
 
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode]
+        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode, self._custom_mode]
         self._pages.add_mode(self.pages, active_layers)
         self.set_page_0_1_button(self.buttons["Page 1/2"])
         self.set_page_0_2_button(self.buttons["Page 1/3"])
