@@ -383,6 +383,8 @@ class SessionComponent(SessionBase):
     def _track_bank_left_value(self, value):
         if value:
             self.set_offsets(max(0, self._track_offset - 1), self.scene_offset())
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_track = self._song.tracks[self.track_offset()]
             self.update_track_selection()
 
     # Select Next Track
@@ -395,6 +397,8 @@ class SessionComponent(SessionBase):
     def _track_bank_right_value(self, value):
         if value:
             self.set_offsets(min(self._track_offset + 1, len(self._song.visible_tracks)-1), self.scene_offset())
+            if Options.session_box_linked_to_selection:
+                self._song.view.selected_track = self._song.tracks[self.track_offset()]
             self.update_track_selection()
 
     # Selected Track Listener
@@ -413,8 +417,6 @@ class SessionComponent(SessionBase):
         try:
             self._mixer.set_track_offset(self.track_offset())
             self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
-            if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
             self.display_track_name()
             self._on_track_color_changed()
             self._on_mute_changed()
