@@ -4,6 +4,7 @@ from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
 from . import CUSTOM_ACTIONS
 from .consts import *
+import sys, os
 from .ClyphXTrackActions import ClyphXTrackActions
 # from .ClyphXSnapActions9 import ClyphXSnapActions
 from .ClyphXGlobalActions import ClyphXGlobalActions
@@ -15,7 +16,15 @@ from .ClyphXGlobalActions import ClyphXGlobalActions
 # from .ClyphXUserActions import ClyphXUserActions
 # from .ClyphXM4LBrowserInterface import ClyphXM4LBrowserInterface
 
-FOLDER = '/open_control/'
+class UserAction:
+    def __init__(self, action, *a, **k):
+        if action.startswith("["):
+            self.name = action
+        else:
+            self.name = "[] " + action
+
+        super(UserAction, self).__init__(*a, **k)
+
 class ActionsComponent(CompoundComponent):
 
     def __init__(self, parent, *a, **k):
@@ -123,7 +132,7 @@ class ActionsComponent(CompoundComponent):
                                 'OUTSUB' : self._track_actions.adjust_output_sub_routing,
                                 'NAME' : self._track_actions.set_name,
                                 'RENAMEALL' : self._track_actions.rename_all_clips}  
-
+        self.get_user_settings()
         self.scan_clips()
 
     def scan_clips(self):
@@ -133,9 +142,6 @@ class ActionsComponent(CompoundComponent):
                 if clip_slot.has_clip:
                     self.find_action(clip_slot.clip)
                     
-    def fake(self, *args):
-        args = args[0]
-
     @property
     def selected_scene(self):
         return self.session._scene_offset
@@ -150,14 +156,12 @@ class ActionsComponent(CompoundComponent):
 
     def on_selected_clip_changed(self):
         if self._song.view.highlighted_clip_slot.clip:
-            self.selected_clip = self._song.view.highlighted_clip_slot.clip
-            # print(self.selected_clip.name)
-            self._on_clip_name_changed.subject = self.selected_clip
+            self._on_clip_name_changed.subject = self._song.view.highlighted_clip_slot.clip
         
     @subject_slot('name')
     def _on_clip_name_changed(self):
         clip = self._song.view.highlighted_clip_slot.clip
-        name = self._song.view.highlighted_clip_slot.clip.name
+        print("clip_name")
         self.find_action(clip)
     
     def find_action(self, clip):
@@ -165,9 +169,8 @@ class ActionsComponent(CompoundComponent):
         if index_1 > -1:
             index_2 = clip.name.find(")")
             num = int(clip.name[index_1+2:index_2])
-            action = clip.name[index_2+1:]
-            CUSTOM_ACTIONS.CUSTOM_ACTION[num] = clip
-            # print([num, action])
+            self.custom_action[num] = clip
+            print([num, self.custom_action[num].name])
 
 
     def set_custom_buttons(self, buttons):
@@ -180,23 +183,23 @@ class ActionsComponent(CompoundComponent):
             btn_num = args[1]
             print(btn_num, value)
             if value:
-                # action = [elem.strip() for elem in CUSTOM_ACTIONS.CUSTOM_ACTION[btn_num].split(";")]
-                print(CUSTOM_ACTIONS.CUSTOM_ACTION[btn_num])
-                xtrigger = CUSTOM_ACTIONS.CUSTOM_ACTION[btn_num]
+                xtrigger = self.custom_action[btn_num]
                 self.handle_action_list_trigger(self.song().view.selected_track, xtrigger)
-                # for a in action:
-                #     a_strip = a.strip()
-                #     print(a_strip)
-                #     if a_strip.find("/") > -1:
-                #         num_track = int(a_strip[:a_strip.find("/")])-1
-                #         sub_actions = [elem.strip() for elem in a_strip[a_strip.find("/")+1:].split(',')]
-                #         for s in sub_actions:
-                #             args = [elem.strip() for elem in s.split(" ")]
-                #             # self.track_actions[args[0]](num_track, args[1:])
-                #     else:
-                #         args = [elem.strip() for elem in a.split(" ")]
-                #         # self.global_actions[args[0]](args[1:])
-                #         print(args[1:])
+                  
+
+    def get_user_settings(self):
+        self.custom_action = {}
+        """ Get user settings (variables, prefs and control settings) from text file and perform startup actions if any """
+        path = os.path.dirname(os.path.abspath(__file__))
+        user_file = path + '/CUSTOM_ACTIONS.txt'
+        for line in open(user_file): 
+            print(line)
+            if line.startswith("CUSTOM_ACTION["):
+                button_number = line[14:line.find("]")]
+                print("number " + button_number)
+                action = line[line.find("=")+1:]
+                print("action " + action)
+                self.custom_action[int(button_number)] = UserAction(action)
 
 
     def action_dispatch(self, tracks, xclip, action_name, args, ident):
@@ -676,75 +679,8 @@ class ActionsComponent(CompoundComponent):
                 debug_string = dr.name
             print('get_drum_rack_to_operate_on returning dr=' + str(debug_string))
         return dr
-                        
-    
-    def get_user_settings(self, midi_map_handle):
-        """ Get user settings (variables, prefs and control settings) from text file and perform startup actions if any """
-        list_to_build = None
-        ctrl_data = []
-        prefs_data = []
-        try:
-            mrs_path = ''
-            for path in sys.path:
-                if 'MIDI Remote Scripts' in path:
-                    mrs_path = path
-                    break
-            user_file = mrs_path + FOLDER + 'UserSettings.txt'
-            if not self._user_settings_logged:
-                print(' ------- Attempting to read UserSettings file: ' + user_file + '------- ')
-            for line in open(user_file): 
-                line = self.get_name(line.rstrip('\n'))
-                if not line.startswith(('#', '"', '*')) and not line.strip() == '':
-                    if not self._user_settings_logged:
-                        print(str(line))
-                if not line.startswith(('#', '"', 'STARTUP_', 'INCLUDE_NESTED_', 'SNAPSHOT_', 'PROCESS_XCLIPS_', 'PUSH_EMU', 'APC_PUSH_EMU', 'CSLINKER')) and not line == '':
-                    if '[USER CONTROLS]' in line:
-                        list_to_build = 'controls'
-                    elif '[USER VARIABLES]' in line:
-                        list_to_build = 'vars'
-                    elif '[EXTRA PREFS]' in line:
-                        list_to_build = 'prefs'
-                    else:
-                        if list_to_build == 'vars' and '=' in line:
-                            line = self.replace_user_variables(line)
-                            self.handle_user_variable_assignment(line)
-                        elif list_to_build == 'controls' and '=' in line:
-                            ctrl_data.append(line)
-                        elif list_to_build == 'prefs' and '=' in line:
-                            prefs_data.append(line)
-                elif 'PUSH_EMULATION' in line:
-                    self._push_emulation = line.split('=')[1].strip() == 'ON'
-                    if self._push_emulation:
-                        if 'APC' in line:
-                            with self.component_guard():
-                                self._push_apc_combiner = Push_APC_Combiner(self)
-                        self.enable_push_emulation(self._control_surfaces())                        
-                elif line.startswith('INCLUDE_NESTED_DEVICES_IN_SNAPSHOTS ='):
-                    include_nested = self.get_name(line[37:].strip())
-                    include_nested_devices = False
-                    if include_nested.startswith('ON'):
-                        include_nested_devices = True
-                    self._snap_actions._include_nested_devices = include_nested_devices
-                elif line.startswith('SNAPSHOT_PARAMETER_LIMIT ='):
-                    try: limit = int(line[26:].strip())
-                    except: limit = 500
-                    self._snap_actions._parameter_limit = limit
-                elif line.startswith('PROCESS_XCLIPS_IF_TRACK_MUTED ='):
-                    self._process_xclips_if_track_muted = line.split('=')[1].strip() == 'TRUE'
-                elif line.startswith('STARTUP_ACTIONS =') and not self._startup_actions_complete:
-                    actions = line[17:].strip()
-                    if actions != 'OFF':
-                        action_list = '[]' + actions
-                        self.schedule_message(2, partial(self.perform_startup_actions, action_list))
-                        self._startup_actions_complete = True
-                elif line.startswith('CSLINKER'):
-                    self._cs_linker.parse_settings(line)
-            if ctrl_data:
-                self._control_component.get_user_control_settings(ctrl_data, midi_map_handle)
-            if prefs_data:
-                self._extra_prefs.get_user_settings(prefs_data)
-        except: pass
-            
+      
+
         
     def enable_push_emulation(self, scripts):
         """ Try to disable Push's handshake to allow for emulation. 
