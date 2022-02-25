@@ -5,16 +5,17 @@ from _Framework.CompoundComponent import CompoundComponent
 from . import CUSTOM_ACTIONS
 from .consts import *
 from .ClyphXTrackActions import ClyphXTrackActions
-from .ClyphXSnapActions9 import ClyphXSnapActions
+# from .ClyphXSnapActions9 import ClyphXSnapActions
 from .ClyphXGlobalActions import ClyphXGlobalActions
-from .ClyphXDeviceActions import ClyphXDeviceActions
-from .ClyphXDRActions9 import ClyphXDRActions9
-from .ClyphXClipActions import ClyphXClipActions
-from .ClyphXControlSurfaceActions9 import ClyphXControlSurfaceActions9 # specialized version for L9
-from .ClyphXTriggers import ClyphXTrackComponent, ClyphXControlComponent, ClyphXCueComponent
-from .ClyphXUserActions import ClyphXUserActions
-from .ClyphXM4LBrowserInterface import ClyphXM4LBrowserInterface
+# from .ClyphXDeviceActions import ClyphXDeviceActions
+# from .ClyphXDRActions9 import ClyphXDRActions9
+# from .ClyphXClipActions import ClyphXClipActions
+# from .ClyphXControlSurfaceActions9 import ClyphXControlSurfaceActions9 # specialized version for L9
+# from .ClyphXTriggers import ClyphXTrackComponent, ClyphXControlComponent, ClyphXCueComponent
+# from .ClyphXUserActions import ClyphXUserActions
+# from .ClyphXM4LBrowserInterface import ClyphXM4LBrowserInterface
 
+FOLDER = '/open_control/'
 class ActionsComponent(CompoundComponent):
 
     def __init__(self, parent, *a, **k):
@@ -23,8 +24,8 @@ class ActionsComponent(CompoundComponent):
         self.session = parent._session
         self._global = ClyphXGlobalActions(self)
         self._track_actions = ClyphXTrackActions(self)
-        self._clip_actions = ClyphXClipActions(self)
-        self._device_actions = ClyphXDeviceActions(self)
+        # self._clip_actions = ClyphXClipActions(self)
+        # self._device_actions = ClyphXDeviceActions(self)
         self._is_debugging = True
         self.global_actions = {'ASN' : self._global.do_variable_assignment,
                             'ADDAUDIO' : self._global.create_audio_track,
