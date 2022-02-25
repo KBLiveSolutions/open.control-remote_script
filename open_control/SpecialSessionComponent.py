@@ -16,7 +16,11 @@ class SessionComponent(SessionBase):
         self.selected_setlist_song = None
         self.playing_song = None
         self._track_leds = [None, None, None]
+        self._custom_action = None
         super(SessionComponent, self).__init__(*a, **k)
+
+    def set_custom_action(self, custom_action):
+        self._custom_action = custom_action
 
     def update(self):
         super(SessionComponent, self).update()
@@ -274,6 +278,8 @@ class SessionComponent(SessionBase):
         self.selected_scene = self._song.view.selected_scene
         self._on_scene_color_changed.subject = self.selected_scene
         self._on_scene_name_changed.subject = self.selected_scene
+        if self._custom_action is not None:
+            self._custom_action.on_selected_clip_changed()
         if self.selected_scene in self._song.scenes and Options.session_box_linked_to_selection:
             self._scene_offset = int(list(self._song.scenes).index(self.selected_scene))
             if self._track_offset is not -1 and self._scene_offset is not -1:
@@ -404,6 +410,8 @@ class SessionComponent(SessionBase):
         self._on_track_name_changed.subject = self.song().view.selected_track
         self._on_mute_changed.subject = self.song().view.selected_track
         self._on_arm_changed.subject = self.song().view.selected_track
+        if self._custom_action is not None:
+            self._custom_action.on_selected_clip_changed()
         if self.selected_track in self._song.visible_tracks and Options.session_box_linked_to_selection:
             self._track_offset = list(self._song.visible_tracks).index(self.selected_track)
             if self._track_offset > -1: # and self._scene_offset > -1:
@@ -571,7 +579,7 @@ class SessionComponent(SessionBase):
         track = self.active_track
         if self.is_enabled() and self._arm_button != None:
             color = 0
-            if track.arm == 1 and track.can_ce_armed:
+            if track.arm == 1 and track.can_be_armed:
                 color = 127
             self._arm_button.send_value(color, force=True)
 

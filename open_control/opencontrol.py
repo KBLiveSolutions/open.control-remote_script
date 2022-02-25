@@ -259,6 +259,7 @@ class opencontrol(ControlSurface):
             self._device = DeviceComponent(self, device_selection_follows_track_selection=True)
             self._looper = LooperComponent(self, device_selection_follows_track_selection=False)
             self._custom = ActionsComponent(self)
+            self._session.set_custom_action(self._custom)
             self._create_pages()
             self.set_device_component(self._device)
             self._device.set_mixer(self._mixer)
