@@ -425,7 +425,6 @@ class SessionComponent(SessionBase):
         try:
             self._mixer.set_track_offset(self.track_offset())
             self._mixer._selected_strip.set_track(self._song.tracks[self.track_offset()])
-            print(self._song.view.selected_track)
             # if Options.session_box_linked_to_selection:
             #     self._song.view.selected_track = self._song.tracks[self.track_offset()]
             self.display_track_name()

@@ -2,28 +2,32 @@ import Live
 from _Framework.SubjectSlot import subject_slot
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
-from . import CUSTOM_ACTIONS
 from .consts import *
 import sys, os
 from .ClyphXTrackActions import ClyphXTrackActions
 # from .ClyphXSnapActions9 import ClyphXSnapActions
 from .ClyphXGlobalActions import ClyphXGlobalActions
-# from .ClyphXDeviceActions import ClyphXDeviceActions
-# from .ClyphXDRActions9 import ClyphXDRActions9
-# from .ClyphXClipActions import ClyphXClipActions
+from .ClyphXDeviceActions import ClyphXDeviceActions
+from .ClyphXDRActions9 import ClyphXDRActions9
+from .ClyphXClipActions import ClyphXClipActions
 # from .ClyphXControlSurfaceActions9 import ClyphXControlSurfaceActions9 # specialized version for L9
 # from .ClyphXTriggers import ClyphXTrackComponent, ClyphXControlComponent, ClyphXCueComponent
 # from .ClyphXUserActions import ClyphXUserActions
 # from .ClyphXM4LBrowserInterface import ClyphXM4LBrowserInterface
 
 class UserAction:
-    def __init__(self, action, *a, **k):
-        if action.startswith("["):
-            self.name = action
+    def __init__(self, action_name, *a, **k):
+        if action_name.startswith("["):
+            self.name = action_name
         else:
-            self.name = "[] " + action
-
+            self.name = "[] " + action_name
         super(UserAction, self).__init__(*a, **k)
+
+    def update_custom_action(self, action_name):
+        if action_name.startswith("["):
+            self.name = action_name
+        else:
+            self.name = "[] " + action_name
 
 class ActionsComponent(CompoundComponent):
 
@@ -33,9 +37,11 @@ class ActionsComponent(CompoundComponent):
         self.session = parent._session
         self._global = ClyphXGlobalActions(self)
         self._track_actions = ClyphXTrackActions(self)
-        # self._clip_actions = ClyphXClipActions(self)
-        # self._device_actions = ClyphXDeviceActions(self)
-        self._is_debugging = True
+        self._clip_actions = ClyphXClipActions(self)
+        self._device_actions = ClyphXDeviceActions(self)
+        self._dr_actions = ClyphXDRActions9(self)
+        self._is_debugging = False
+        self._play_seq_clips = {}
         self.global_actions = {'ASN' : self._global.do_variable_assignment,
                             'ADDAUDIO' : self._global.create_audio_track,
                             'ADDMIDI' : self._global.create_midi_track,
@@ -132,10 +138,72 @@ class ActionsComponent(CompoundComponent):
                                 'OUTSUB' : self._track_actions.adjust_output_sub_routing,
                                 'NAME' : self._track_actions.set_name,
                                 'RENAMEALL' : self._track_actions.rename_all_clips}  
+
+        self.device_actions = {'CSEL' : self._device_actions.adjust_selected_chain,
+                                'CS' : self._device_actions.adjust_chain_selector, 
+                                'RESET' : self._device_actions.reset_params, 
+                                'RND' : self._device_actions.randomize_params, 
+                                'SEL' : self._device_actions.select_device,
+                                'SET' : self._device_actions.set_all_params,
+                                'P1' : self._device_actions.adjust_best_of_bank_param, 
+                                'P2' : self._device_actions.adjust_best_of_bank_param, 
+                                'P3' : self._device_actions.adjust_best_of_bank_param, 
+                                'P4' : self._device_actions.adjust_best_of_bank_param,
+                                'P5' : self._device_actions.adjust_best_of_bank_param, 
+                                'P6' : self._device_actions.adjust_best_of_bank_param, 
+                                'P7' : self._device_actions.adjust_best_of_bank_param, 
+                                'P8' : self._device_actions.adjust_best_of_bank_param, 
+                                'B1' : self._device_actions.adjust_banked_param, 
+                                'B2' : self._device_actions.adjust_banked_param, 
+                                'B3' : self._device_actions.adjust_banked_param, 
+                                'B4' : self._device_actions.adjust_banked_param, 
+                                'B5' : self._device_actions.adjust_banked_param, 
+                                'B6' : self._device_actions.adjust_banked_param, 
+                                'B7' : self._device_actions.adjust_banked_param, 
+                                'B8' : self._device_actions.adjust_banked_param}
+
+        self.looper_actions = {'LOOPER' : self._device_actions.set_looper_on_off, 
+                                'REV' : self._device_actions.set_looper_rev, 
+                                'OVER' : self._device_actions.set_looper_state,
+                                'PLAY' : self._device_actions.set_looper_state, 
+                                'REC' : self._device_actions.set_looper_state, 
+                                'STOP': self._device_actions.set_looper_state}   
+
+        self.clip_actions = {'CENT' : self._clip_actions.adjust_detune,
+                                'SEMI' : self._clip_actions.adjust_transpose,
+                                'GAIN' : self._clip_actions.adjust_gain,
+                                'CUE' : self._clip_actions.adjust_cue_point,
+                                'END' : self._clip_actions.adjust_end,
+                                'START' : self._clip_actions.adjust_start,
+                                'GRID' : self._clip_actions.adjust_grid_quantization,
+                                'TGRID' : self._clip_actions.set_triplet_grid,
+                                'ENVINS' : self._clip_actions.insert_envelope,
+                                'ENVCLR' : self._clip_actions.clear_envelope,
+                                'ENVCAP' : self._clip_actions.capture_to_envelope,
+                                'ENVSHOW' : self._clip_actions.show_envelope,
+                                'ENVHIDE' : self._clip_actions.hide_envelopes,
+                                'QNTZ' : self._clip_actions.quantize,
+                                'EXTEND' : self._clip_actions.duplicate_clip_content,
+                                'DEL' : self._clip_actions.delete_clip,
+                                'DUPE' : self._clip_actions.duplicate_clip,
+                                'CHOP' : self._clip_actions.chop_clip,
+                                'SPLIT' : self._clip_actions.split_clip,
+                                'WARPMODE' : self._clip_actions.adjust_warp_mode,
+                                'LOOP' : self._clip_actions.do_clip_loop_action,
+                                'SIG' : self._clip_actions.adjust_time_signature,
+                                'WARP' : self._clip_actions.set_warp,
+                                'NAME' : self._clip_actions.set_clip_name} 
+
+        self.dr_actions = {'SCROLL' : self._dr_actions.scroll_selector,
+                            'UNMUTE' : self._dr_actions.unmute_all,
+                            'UNSOLO' : self._dr_actions.unsolo_all
+                        }
+
         self.get_user_settings()
         self.scan_clips()
 
     def scan_clips(self):
+        self.ca_clips = []
         for t in self.song().tracks:
             for s in range(len(self.song().scenes)):
                 clip_slot = t.clip_slots[s]
@@ -157,35 +225,46 @@ class ActionsComponent(CompoundComponent):
     def on_selected_clip_changed(self):
         if self._song.view.highlighted_clip_slot.clip:
             self._on_clip_name_changed.subject = self._song.view.highlighted_clip_slot.clip
-        
+
     @subject_slot('name')
     def _on_clip_name_changed(self):
         clip = self._song.view.highlighted_clip_slot.clip
-        print("clip_name")
         self.find_action(clip)
-    
+
     def find_action(self, clip):
-        index_1 = clip.name.find("(C")
+        index_1 = clip.name.find("(CA")
         if index_1 > -1:
             index_2 = clip.name.find(")")
-            num = int(clip.name[index_1+2:index_2])
-            self.custom_action[num] = clip
+            num = int(clip.name[index_1+3:index_2])
+            if num not in self.custom_action.keys():
+                self.custom_action[num] = UserAction(clip.name)
+            if not clip.playing_status_has_listener(self.on_ca_clip_playing):
+                clip.add_playing_status_listener(self.on_ca_clip_playing)
+            self.ca_clips.append(clip)
             print([num, self.custom_action[num].name])
 
+    def on_ca_clip_playing(self):
+        for clip in self.ca_clips:
+            if clip.is_playing:
+                print(clip.name)
+                index_1 = clip.name.find("(CA")
+                if index_1 > -1:
+                    index_2 = clip.name.find(")")
+                    num = int(clip.name[index_1+3:index_2])
+                self.custom_action[num].update_custom_action(clip.name)
 
     def set_custom_buttons(self, buttons):
         self.custom_buttons = buttons
-        self.on_custom_button.subject = buttons
+        self.on_custom_button_pressed.subject = buttons
 
     @subject_slot('value')
-    def on_custom_button(self, *args):
+    def on_custom_button_pressed(self, *args):
             value = args[0]
             btn_num = args[1]
-            print(btn_num, value)
-            if value:
-                xtrigger = self.custom_action[btn_num]
-                self.handle_action_list_trigger(self.song().view.selected_track, xtrigger)
-                  
+            xtrigger = self.custom_action[btn_num]
+            if xtrigger:
+                print(btn_num, value, xtrigger.name)
+                self.custom_handle_action_list_trigger(value, self.song().view.selected_track, xtrigger)
 
     def get_user_settings(self):
         self.custom_action = {}
@@ -196,9 +275,7 @@ class ActionsComponent(CompoundComponent):
             print(line)
             if line.startswith("CUSTOM_ACTION["):
                 button_number = line[14:line.find("]")]
-                print("number " + button_number)
                 action = line[line.find("=")+1:]
-                print("action " + action)
                 self.custom_action[int(button_number)] = UserAction(action)
 
 
@@ -231,18 +308,18 @@ class ActionsComponent(CompoundComponent):
                     if action_name in self.track_actions:
                         self.track_actions[action_name](t, xclip, ident, args)
                     elif action_name == 'LOOPER': 
-                        if args and args.split()[0] in LOOPER_ACTIONS: 
-                            getattr(self._device_actions, LOOPER_ACTIONS[args.split()[0]])(t, xclip, ident, args)
-                        elif action_name in LOOPER_ACTIONS:
-                            getattr(self._device_actions, LOOPER_ACTIONS[action_name])(t, xclip, ident, args)                       
+                        if args and args.split()[0] in self.looper_actions: 
+                            self.looper_actions[args.split()[0]](t, xclip, ident, args)
+                        elif action_name in self.looper_actions:
+                            self.looper_actions[action_name](t, xclip, ident, args)                       
                     elif action_name.startswith('DEV'): 
                         device_action = self.get_device_to_operate_on(t, action_name, args)
                         device_args = None
                         if device_action[0]:
                             if len(device_action) > 1:
                                 device_args = device_action[1]
-                            if device_args and device_args.split()[0] in DEVICE_ACTIONS: 
-                                getattr(self._device_actions, DEVICE_ACTIONS[device_args.split()[0]])(device_action[0], t, xclip, ident, device_args)
+                            if device_args and device_args.split()[0] in self.device_actions: 
+                                self.device_actions[device_args.split()[0]](device_action[0], t, xclip, ident, device_args)
                             elif device_args and 'CHAIN' in device_args: 
                                 self._device_actions.dispatch_chain_action(device_action[0], t, xclip, ident, device_args)
                             elif action_name.startswith('DEV'):
@@ -253,8 +330,8 @@ class ActionsComponent(CompoundComponent):
                         if clip_action[0]:
                             if len(clip_action) > 1:
                                 clip_args = clip_action[1]
-                            if clip_args and clip_args.split()[0] in CLIP_ACTIONS: 
-                                getattr(self._clip_actions, CLIP_ACTIONS[clip_args.split()[0]])(clip_action[0], t, xclip, ident, clip_args.replace(clip_args.split()[0], ''))
+                            if clip_args and clip_args.split()[0] in self.clip_actions: 
+                                self.clip_actions[clip_args.split()[0]](clip_action[0], t, xclip, ident, clip_args.replace(clip_args.split()[0], ''))
                             elif clip_args and clip_args.split()[0].startswith('NOTES'):
                                 self._clip_actions.do_clip_note_action(clip_action[0], t, xclip, ident, args)
                             elif action_name.startswith('CLIP'):
@@ -263,8 +340,8 @@ class ActionsComponent(CompoundComponent):
                         dr = self.get_drum_rack_to_operate_on(t)
                         arg = args.split()[0]
                         if dr and args:
-                            if arg in DR_ACTIONS: 
-                                getattr(self._dr_actions, DR_ACTIONS[arg])(dr, t, xclip, ident, args.strip())
+                            if arg in self.dr_actions: 
+                                self.dr_actions[arg](dr, t, xclip, ident, args.strip())
                             elif 'PAD' in args:
                                 self._dr_actions.dispatch_pad_action(dr, t, xclip, ident, args.strip())
                     # elif action_name in self._user_actions._action_dict:
@@ -273,10 +350,10 @@ class ActionsComponent(CompoundComponent):
             print('action_dispatch triggered, ident=' + str(ident) + ' and track(s)=' + str(self.track_list_to_string(tracks)) + ' and action=' + str(action_name) + ' and args=' + str(args))
 
 
-    def handle_external_trigger(self, xtrigger):
-        """ This replaces the below method for compatibility with scripts that also work with ClyphX Pro. """
-        xtrigger.name = '[] %s' % xtrigger.name
-        self.handle_action_list_trigger(self.song().view.selected_track, xtrigger)
+    # def handle_external_trigger(self, xtrigger):
+    #     """ This replaces the below method for compatibility with scripts that also work with ClyphX Pro. """
+    #     xtrigger.name = '[] %s' % xtrigger.name
+    #     self.handle_action_list_trigger(self.song().view.selected_track, xtrigger)
 
 
     def handle_xclip_name(self, track, xclip): 
@@ -284,12 +361,12 @@ class ActionsComponent(CompoundComponent):
         self.handle_action_list_trigger(track, xclip)
                         
         
-    def handle_m4l_trigger(self, name):
-        """ Convenience method for triggering actions from M4L by simply supplying an action name. """
-        self.handle_action_list_trigger(self.song().view.selected_track, ActionList('[]' + name))
-        
+    # def handle_m4l_trigger(self, name):
+    #     """ Convenience method for triggering actions from M4L by simply supplying an action name. """
+    #     self.handle_action_list_trigger(self.song().view.selected_track, ActionList('[]' + name))
+
                 
-    def handle_action_list_trigger(self, track, xtrigger): 
+    def custom_handle_action_list_trigger(self, value, track, xtrigger): 
         """ Directly dispatches snapshot recall, X-Control overrides and Seq X-Clips.  Otherwise, seperates ident from action names, splits up lists of action names and calls action dispatch. """
         if self._is_debugging:
             print('---')
@@ -312,12 +389,18 @@ class ActionsComponent(CompoundComponent):
                 is_play_seq = False
                 is_loop_seq = False
                 
-                # X-Clips can have on and off action lists, the following handles this
-                if type(xtrigger) is Live.Clip.Clip:
-                    raw_action_list = self.get_xclip_action_list(xtrigger, raw_action_list)
-                    if not raw_action_list:
-                        return
+                # # X-Clips can have on and off action lists, the following handles this
+                # if type(xtrigger) is Live.Clip.Clip:
+                #     raw_action_list = self.custom_get_xclip_action_list(value, xtrigger, raw_action_list)
+                #     if not raw_action_list:
+                #         return
                 
+                # X-Clips can have on and off action lists, the following handles this
+                # if type(xtrigger) is Live.Clip.Clip:
+                raw_action_list = self.custom_get_xclip_action_list(value, xtrigger, raw_action_list)
+                if not raw_action_list:
+                    return
+
                 # Check if the trigger is a PSEQ (accessible to any type of X-Trigger)
                 if raw_action_list[0] == '(' and '(PSEQ)' in raw_action_list: 
                     is_play_seq = True
@@ -348,14 +431,74 @@ class ActionsComponent(CompoundComponent):
                             if self._is_debugging:
                                 print(['handle_action_list_trigger triggered, ident=' + str(ident) + ' and track(s)=' + str(self.track_list_to_string(action['track'])) + ' and action=' + str(action['action']) + ' and args=' + str(action['args'])])
                 
-                            
-    def get_xclip_action_list(self, xclip, full_action_list):
+             
+                
+    # def handle_action_list_trigger(self, track, xtrigger): 
+    #     """ Directly dispatches snapshot recall, X-Control overrides and Seq X-Clips.  Otherwise, seperates ident from action names, splits up lists of action names and calls action dispatch. """
+    #     if self._is_debugging:
+    #         print('---')
+    #     name = None
+    #     if xtrigger is not None:
+    #         name = self.get_name(xtrigger.name).strip() 
+    #     if name and name[0] == '[' and ']' in name:         
+    #         # Snap action, so pass directly to snap component
+    #         if ' || (' in name and type(xtrigger) is Live.Clip.Clip and xtrigger.is_playing:
+    #             self._snap_actions.recall_track_snapshot(name, xtrigger)
+    #         # Control reassignment, so pass directly to control component
+    #         elif '[[' in name and ']]' in name:
+    #             self._control_component.assign_new_actions(name) 
+    #         # Standard trigger
+    #         else:
+    #             ident = name[name.index('['):name.index(']')+1].strip() 
+    #             raw_action_list = name.replace(ident, '', 1).strip()
+    #             if raw_action_list == '':
+    #                 return
+    #             is_play_seq = False
+    #             is_loop_seq = False
+                
+    #             # X-Clips can have on and off action lists, the following handles this
+    #             if type(xtrigger) is Live.Clip.Clip:
+    #                 raw_action_list = self.get_xclip_action_list(xtrigger, raw_action_list)
+    #                 if not raw_action_list:
+    #                     return
+                
+    #             # Check if the trigger is a PSEQ (accessible to any type of X-Trigger)
+    #             if raw_action_list[0] == '(' and '(PSEQ)' in raw_action_list: 
+    #                 is_play_seq = True
+    #                 raw_action_list = raw_action_list.replace('(PSEQ)', '').strip()
+                    
+    #             # Check if the trigger is a LSEQ (accessible only to X-Clips)
+    #             elif type(xtrigger) is Live.Clip.Clip and raw_action_list[0] == '(' and '(LSEQ)' in raw_action_list: 
+    #                 is_loop_seq = True
+    #                 raw_action_list = raw_action_list.replace('(LSEQ)', '').strip()
+                
+    #             # Build formatted action list    
+    #             formatted_action_list = []
+    #             for action in raw_action_list.split(';'): 
+    #                 action_data = self.format_action_name(track, action.strip())
+    #                 if action_data:
+    #                     formatted_action_list.append(action_data)
+                        
+    #             # If seq, pass to appropriate function, else call action dispatch for each action in the formatted action list
+    #             if formatted_action_list:
+    #                 if is_play_seq: 
+    #                     self.handle_play_seq_action_list(formatted_action_list, xtrigger, ident)
+    #                 elif is_loop_seq:
+    #                     self._loop_seq_clips[xtrigger.name] = [ident, formatted_action_list]
+    #                     self.handle_loop_seq_action_list(xtrigger, 0)
+    #                 else:
+    #                     for action in formatted_action_list:
+    #                         self.action_dispatch(action['track'], xtrigger, action['action'], action['args'], ident)
+    #                         if self._is_debugging:
+    #                             print(['handle_action_list_trigger triggered, ident=' + str(ident) + ' and track(s)=' + str(self.track_list_to_string(action['track'])) + ' and action=' + str(action['action']) + ' and args=' + str(action['args'])])
+                
+
+    def custom_get_xclip_action_list(self, value, xclip, full_action_list):
         """ Get the action list to perform. X-Clips can have an on and off action list seperated by a comma. This will return which action list to perform 
         based on whether the clip is playing. If the clip is not playing and there is no off action, this returns None. """
         result = None   
         split_list = full_action_list.split(',')
-        value = 127 # AJOUTER SI BOUTON ENFONCE
-        if value:
+        if value == 127:
             result = split_list[0]
         else:
             if len(split_list) == 2:
@@ -366,6 +509,25 @@ class ActionsComponent(CompoundComponent):
         if self._is_debugging:
             print('get_xclip_action_list returning ' + str(result))
         return result
+
+
+    # def get_xclip_action_list(self, xclip, full_action_list):
+    #     """ Get the action list to perform. X-Clips can have an on and off action list seperated by a comma. This will return which action list to perform 
+    #     based on whether the clip is playing. If the clip is not playing and there is no off action, this returns None. """
+    #     result = None   
+    #     split_list = full_action_list.split(',')
+    #     value = 127 # AJOUTER SI BOUTON ENFONCE
+    #     if value:
+    #         result = split_list[0]
+    #     else:
+    #         if len(split_list) == 2:
+    #             if split_list[1].strip() == '*':
+    #                 result = split_list[0]
+    #             else:
+    #                 result = split_list[1]
+    #     if self._is_debugging:
+    #         print('get_xclip_action_list returning ' + str(result))
+    #     return result
     
                                 
     def replace_user_variables(self, string_with_vars):
@@ -727,9 +889,9 @@ class ActionsComponent(CompoundComponent):
         return result + ']'
         
             
-    def perform_startup_actions(self, action_list):
-        """ Delay startup action so it can perform actions on values that are changed upon set load (like overdub) """
-        self.handle_action_list_trigger(self.song().view.selected_track, ActionList(action_list))
+    # def perform_startup_actions(self, action_list):
+    #     """ Delay startup action so it can perform actions on values that are changed upon set load (like overdub) """
+    #     self.handle_action_list_trigger(self.song().view.selected_track, ActionList(action_list))
             
             
     def setup_tracks(self):  

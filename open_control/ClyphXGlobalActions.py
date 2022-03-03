@@ -492,9 +492,9 @@ class ClyphXGlobalActions(ControlSurfaceComponent):
     def set_overdub(self, track, xclip, ident, value = None):
         """ Toggles or turns on/off overdub """
         if value in KEYWORDS:
-            self.song().overdub = KEYWORDS[value]
+            self.song().arrangement_overdub = KEYWORDS[value]
         else:
-            self.song().overdub = not(self.song().overdub)
+            self.song().arrangement_overdub = not(self.song().arrangement_overdub)
             
             
     def set_metronome(self, track, xclip, ident, value = None):

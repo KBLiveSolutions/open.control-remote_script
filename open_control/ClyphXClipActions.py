@@ -525,6 +525,7 @@ class ClyphXClipActions(ControlSurfaceComponent):
                 elif args.startswith('*'):
                     try:
                         new_end = (clip.loop_end - clip_stats['loop_length']) + (clip_stats['loop_length'] * float(args[1:]))
+                        print([clip.name, new_end])
                     except: pass
                 else:
                     self.do_loop_set(clip, args, clip_stats)

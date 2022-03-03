@@ -1,8 +1,36 @@
-CUSTOM_ACTION = {}
 
-CUSTOM_ACTION[1] = START ; METRO; 1/ MUTE ; 2/ MUTE ON, ARM, STOP ; ADDAUDIO
-CUSTOM_ACTION[2] = 2/ MUTE ; SETSTOP ; 
-CUSTOM_ACTION[3] = 3/ MUTE ; 4/ SOLO
+=================================================================================================================
 
+- To create Custom Actions, you need to edit this file. Changes will be applied after saving and relaunching the script.
+This can be done by opening an existing Live set or creating a new one.
 
+- You can create "default" Custom Actions in this file by following this model (the # needs to be removed to uncomment) :
 
+# CUSTOM_ACTION[1] = METRO ; 1/ MUTE ON; 2/ ARM, CLIP2 PLAY ; MST/ VOLUME >2 
+
+When the Custom Action 1 Button is pressed, the Metronome state will toggle, Track 1 will be muted, 
+Track 2 will be armed and the Clip 2 will play ,  and the Master volume will be set 2dB up.
+
+- To add more Custom Actions, add more lines and change the number in the brackets [] :
+
+# CUSTOM_ACTION[2] = 2/ MUTE ; SETSTOP ;
+# CUSTOM_ACTION[3] = 3/ STOP ; REC ;
+
+You can have up to 120 Custom Actions.
+If a Custom Action number is declared several times, only the last one is taken into account.
+
+- You can change or add Custom Actions from within a Live set by adding (CAn); to a Clip name, where n is the Custom Action number.
+The new action will be updated when the Clip is playing.
+So playing a Clip named : 
+(CA1) ; 3/ MUTE ; 4/ ARM
+will change the Custom Action 1 to Mute Track 3 and Arm Track 4
+If the Clip starts with [] and you have ClyphX or ClyphX Pro installed, the corresponding ClyphX action will be executed.
+
+- For a complete list of actions, refer to the User Manual.
+- Custom Actions follow ClyphX syntax, so it is advised to have a look at the ClyphX manual for a deeper use.
+
+Add your actions below this line.
+
+=================================================================================================================
+
+CUSTOM_ACTION[1] = LOC My Locloc
