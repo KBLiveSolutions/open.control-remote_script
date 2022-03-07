@@ -8,8 +8,8 @@ This can be done by opening an existing Live set or creating a new one.
 
 # CUSTOM_ACTION[1] = METRO ; 1/ MUTE ON; 2/ ARM, CLIP2 PLAY ; MST/ VOLUME >2 
 
-When the Custom Action 1 Button is pressed, the Metronome state will toggle, Track 1 will be muted, 
-Track 2 will be armed and the Clip 2 will play ,  and the Master volume will be set 2dB up.
+This means that when the Button set to 'Custom Action 1'  is pressed, the Metronome state will toggle, Track 1 will be muted, 
+Track 2 will be armed and the Clip 2 will play , and the Master volume will be set 2dB up.
 
 - To add more Custom Actions, add more lines and change the number in the brackets [] :
 
@@ -33,4 +33,3 @@ Add your actions below this line.
 
 =================================================================================================================
 
-CUSTOM_ACTION[1] = LOC My Locloc
