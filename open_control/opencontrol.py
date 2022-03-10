@@ -15,11 +15,15 @@
     # You should have received a copy of the GNU General Public License
     # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-""" 1.2.2 changelog:
+
+""" to do
+improve arrangement marker name
+fix track selection
+1.2.2 changelog:
 - added colors to Markers for SONGS
 - fixed (SONG) detection for arrangement markers
-
 """
+
 # coding: utf-8
 from __future__ import print_function
 from __future__ import absolute_import
@@ -524,6 +528,7 @@ class opencontrol(ControlSurface):
         self._session._do_show_highlight()
 
     def on_time_change(self):
+        self._transport.compare_cue()
   
         if int(self.song().current_song_time) is not self.prev_beat:
             self.prev_beat = int(self.song().current_song_time)
@@ -534,7 +539,6 @@ class opencontrol(ControlSurface):
         if quarter is not self.previous_quarter:
             self.previous_quarter = quarter
             self.send_clock()
-            self._transport.compare_cue()
 
     """ DISPLAY """
 

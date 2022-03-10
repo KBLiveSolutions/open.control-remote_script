@@ -6,8 +6,8 @@ from . import Options
 class TransportComponent(TransportBase):
     def __init__(self, parent, *a, **k):
         self.parent = parent
-        self.prev_cue = None
-        self.selected_cue = None
+        # self.left_cue = None
+        self.current_cue = None
         super(TransportComponent, self).__init__(*a, **k)
 
     def set_session(self, session):
@@ -384,41 +384,6 @@ class TransportComponent(TransportBase):
             color = 0 if self.midi_recording_quantization == Live.Song.RecordingQuantization.rec_q_no_q else 126       
             self._midi_recording_quantization_button.send_value(color, force=True)
 
-   # Set/Delete Marker
-    def set_set_or_delete_cue_button(self, button):
-        self._set_or_delete_cue_button = button
-        self._on_set_or_delete_cue.subject = button
-        self._on_cue_points_changed.subject = self.song()
-        self._on_cue_points_changed()
-        self.compare_cue()
-
-    @subject_slot(u'value')
-    def _on_set_or_delete_cue(self, value):
-        if value:
-            self.song().set_or_delete_cue()
-
-    @subject_slot('cue_points')
-    def _on_cue_points_changed(self): 
-        self.compare_cue()
-        for cue_point in self.song().cue_points:
-            if not cue_point.name_has_listener(self._on_cue_name_changed):
-                cue_point.add_name_listener(self._on_cue_name_changed)
-
-    def compare_cue(self):
-        beat = int(self.song().current_song_time)
-        highest_cue = 0
-        for cue_point in self.song().cue_points:
-            if cue_point.time <= beat and not self.check_hide(cue_point.name):
-                if cue_point.time > highest_cue:
-                    highest_cue = cue_point.time
-                    self.selected_cue = cue_point
-        if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
-            self.parent.display_message("Left Marker Name", self.selected_cue.name)
-            if self.prev_cue:
-                self.prev_cue.remove_name_listener(self._on_prev_cue_name_changed)
-            self.prev_cue = self.selected_cue
-            self.prev_cue.add_name_listener(self._on_prev_cue_name_changed)
-
     # Next/Prev Marker
     def set_prev_next_cue_button(self, button):
         self._prev_next_cue_button = button
@@ -459,26 +424,72 @@ class TransportComponent(TransportBase):
 
     @subject_slot(u'value')
     def _on_marker_loop_changed(self, value):
-        index = list(self.song().cue_points).index(self.prev_cue)
+        index = list(self.song().cue_points).index(self.current_cue)
         if value:
             next_cue_time = self.song().cue_points[index+1].time
             self.song().loop = 1
-            self.song().loop_start = self.prev_cue.time
-            self.song().loop_length = next_cue_time - self.prev_cue.time
+            self.song().loop_start = self.current_cue.time
+            self.song().loop_length = next_cue_time - self.current_cue.time
     
+   # Set/Delete Marker
+    def set_set_or_delete_cue_button(self, button):
+        self._set_or_delete_cue_button = button
+        self._on_set_or_delete_cue.subject = button
+        self._on_cue_points_changed.subject = self.song()
+        self._on_cue_points_changed()
+        self.compare_cue()
+
+    @subject_slot(u'value')
+    def _on_set_or_delete_cue(self, value):
+        if value:
+            self.song().set_or_delete_cue()
+
+    @subject_slot('cue_points')
+    def _on_cue_points_changed(self): 
+        self.compare_cue()
+        for cue_point in self.song().cue_points:
+            if not cue_point.name_has_listener(self._on_cue_name_changed):
+                cue_point.add_name_listener(self._on_cue_name_changed)
+
+    def compare_cue(self):
+        if len(self.song().cue_points) == 0:
+            self.no_marker()
+        else:
+            beat = self.song().current_song_time
+            highest_cue = self.song().cue_points[0]
+            lowest_cue = self.song().cue_points[0]
+            for cue_point in self.song().cue_points:
+                if lowest_cue.time >= cue_point.time:
+                    lowest_cue = cue_point
+                if highest_cue.time <= cue_point.time and cue_point.time <= beat: # and not self.check_hide(cue_point.name):
+                    highest_cue = cue_point
+            if lowest_cue.time > beat: 
+                self.no_marker()
+            elif highest_cue != self.current_cue: 
+                self.on_cue_changed(highest_cue)
+
+    def on_cue_changed(self, cue):
+        self.parent.display_message("Left Marker Name", cue.name)
+        try:
+            self.current_cue.remove_name_listener(self._on_left_cue_name_changed)
+            cue.add_name_listener(self._on_left_cue_name_changed)
+        except: pass
+        self.current_cue = cue
+
     # Marker name
-    def _on_prev_cue_name_changed(self):
-        if self.prev_cue:
-            name = self.prev_cue.name
+    def _on_left_cue_name_changed(self):
+        if self.current_cue:
+            name = self.current_cue.name
             if len(name) == 0:
                 name = 'No Name'
             self.parent.display_message("Left Marker Name", name)
-        else:
-            self.parent.display_message("Left Marker Name", "No Marker")
         self._session.scan_setlist()
 
+    def no_marker(self):
+        self.current_cue = None
+        self.parent.display_message("Left Marker Name", "No Marker")
+
     def _on_cue_name_changed(self):
-        print("name chgd")
         self._session.scan_setlist()
 
     def check_stop(self, name):
@@ -494,7 +505,7 @@ class TransportComponent(TransportBase):
     def update(self):
         self._on_start_stop_changed()
         self._on_metronome_changed()
-        self._on_prev_cue_name_changed()
+        self._on_left_cue_name_changed()
         self._on_loop_changed()
         self._on_record_changed()
         self._on_session_record_changed()

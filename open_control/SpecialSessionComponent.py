@@ -372,6 +372,7 @@ class SessionComponent(SessionBase):
                 track.fold_state = not track.fold_state
             elif track.can_show_chains:
                 track.is_showing_chains = not track.is_showing_chains
+            self.update_track_selection()
 
     # Select Prev Track
     def set_track_bank_left_button(self, button):
@@ -384,7 +385,9 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(max(0, self._track_offset - 1), self.scene_offset())
             if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
+                currently_selected = list(self.song().visible_tracks).index(self._song.view.selected_track)
+                index = max(currently_selected-1, 0)
+                self._song.view.selected_track = self.song().visible_tracks[index]
             self.update_track_selection()
 
     # Select Next Track
@@ -398,7 +401,9 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(min(self._track_offset + 1, len(self._song.visible_tracks)-1), self.scene_offset())
             if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
+                currently_selected = list(self.song().visible_tracks).index(self._song.view.selected_track)
+                index = min(currently_selected+1, len(self.song().visible_tracks))
+                self._song.view.selected_track = self.song().visible_tracks[index]
             self.update_track_selection()
 
     # Selected Track Listener
@@ -459,7 +464,8 @@ class SessionComponent(SessionBase):
 
     def display_track_name(self):
         if self.is_enabled():
-            self.parent.display_message("Track Name", self.song().tracks[self._track_offset].name)
+            track = self.active_track
+            self.parent.display_message("Track Name", track.name)
            
     # Clip Launch/Stop
     def set_clip_launch_buttons(self, button):
@@ -573,8 +579,10 @@ class SessionComponent(SessionBase):
         track = self.active_track
         if self.is_enabled() and self._arm_button != None:
             color = 0
-            if track.arm == 1 and track.can_ce_armed:
-                color = 127
+            try:
+                if track.arm == 1:
+                    color = 127
+            except: pass
             self._arm_button.send_value(color, force=True)
 
     # Solo Track
@@ -586,8 +594,10 @@ class SessionComponent(SessionBase):
     def _solo_button_value(self, value):
         if value:
             track = self.active_track
-            track.solo = 0 if track.solo == 1 else 1 
-            self._on_solo_changed()
+            try:
+                track.solo = 0 if track.solo == 1 else 1 
+                self._on_solo_changed()
+            except: pass
 
     @subject_slot('solo')
     def _on_solo_changed(self):
