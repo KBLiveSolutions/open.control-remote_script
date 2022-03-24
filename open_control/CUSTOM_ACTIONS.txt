@@ -2,19 +2,23 @@
 =================================================================================================================
 
 - To create Custom Actions, you need to edit this file. Changes will be applied after saving and relaunching the script.
-This can be done by opening an existing Live set or creating a new one.
+To relaunch the script, you need to either relaunch Live, open an existing Live set or create a new one.
 
 - You can create "default" Custom Actions in this file by following this model (the # needs to be removed to uncomment) :
 
 # CUSTOM_ACTION[1] = METRO ; 1/ MUTE ON; 2/ ARM, CLIP2 PLAY ; MST/ VOLUME >2 
 
-This means that when the Button set to 'Custom Action 1'  is pressed, the Metronome state will toggle, Track 1 will be muted, 
-Track 2 will be armed and the Clip 2 will play , and the Master volume will be set 2dB up.
+The line above means that if you set a Button to 'Custom Action 1' in the Editor, the following things will happen when the button is pressed :
+· The Metronome state will toggle, 
+· Track 1 will be muted, 
+· Track 2 will be armed and the Clip 2 will play , 
+· The Master volume will be set 2dB up.
 
 - To add more Custom Actions, add more lines and change the number in the brackets [] :
 
 # CUSTOM_ACTION[2] = 2/ MUTE ; SETSTOP ;
 # CUSTOM_ACTION[3] = 3/ STOP ; REC ;
+...
 
 You can have up to 120 Custom Actions.
 If a Custom Action number is declared several times, only the last one is taken into account.
