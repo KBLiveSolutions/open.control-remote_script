@@ -35,6 +35,7 @@ class ActionsComponent(CompoundComponent):
         super(ActionsComponent, self).__init__(*a, **k)
         self.transport = parent._transport
         self.session = parent._session
+        self.parent = parent
         self._global = ClyphXGlobalActions(self)
         self._track_actions = ClyphXTrackActions(self)
         self._clip_actions = ClyphXClipActions(self)
@@ -204,11 +205,14 @@ class ActionsComponent(CompoundComponent):
 
     def scan_clips(self):
         self.ca_clips = []
+        self.custom_display_clips = []
         for t in self.song().tracks:
             for s in range(len(self.song().scenes)):
                 clip_slot = t.clip_slots[s]
                 if clip_slot.has_clip:
                     self.find_action(clip_slot.clip)
+                    self.find_custom_display(clip_slot.clip)
+        self.parent.display_message("Custom Display", "Custom")
                     
     @property
     def selected_scene(self):
@@ -230,6 +234,19 @@ class ActionsComponent(CompoundComponent):
     def _on_clip_name_changed(self):
         clip = self._song.view.highlighted_clip_slot.clip
         self.find_action(clip)
+        self.find_custom_display(clip)
+
+    def find_custom_display(self, clip):
+        if clip.name.startswith("(D)"):
+            if not clip.playing_status_has_listener(self.on_custom_display_clip_playing):
+                clip.add_playing_status_listener(self.on_custom_display_clip_playing)
+            self.custom_display_clips.append(clip)
+
+    def on_custom_display_clip_playing(self):
+        for clip in self.custom_display_clips:
+            if clip.is_playing:
+                name = clip.name[3:]
+                self.parent.display_message("Custom Display", name)
 
     def find_action(self, clip):
         index_1 = clip.name.find("(CA")
@@ -431,67 +448,7 @@ class ActionsComponent(CompoundComponent):
                             if self._is_debugging:
                                 print(['handle_action_list_trigger triggered, ident=' + str(ident) + ' and track(s)=' + str(self.track_list_to_string(action['track'])) + ' and action=' + str(action['action']) + ' and args=' + str(action['args'])])
                 
-             
-                
-    # def handle_action_list_trigger(self, track, xtrigger): 
-    #     """ Directly dispatches snapshot recall, X-Control overrides and Seq X-Clips.  Otherwise, seperates ident from action names, splits up lists of action names and calls action dispatch. """
-    #     if self._is_debugging:
-    #         print('---')
-    #     name = None
-    #     if xtrigger is not None:
-    #         name = self.get_name(xtrigger.name).strip() 
-    #     if name and name[0] == '[' and ']' in name:         
-    #         # Snap action, so pass directly to snap component
-    #         if ' || (' in name and type(xtrigger) is Live.Clip.Clip and xtrigger.is_playing:
-    #             self._snap_actions.recall_track_snapshot(name, xtrigger)
-    #         # Control reassignment, so pass directly to control component
-    #         elif '[[' in name and ']]' in name:
-    #             self._control_component.assign_new_actions(name) 
-    #         # Standard trigger
-    #         else:
-    #             ident = name[name.index('['):name.index(']')+1].strip() 
-    #             raw_action_list = name.replace(ident, '', 1).strip()
-    #             if raw_action_list == '':
-    #                 return
-    #             is_play_seq = False
-    #             is_loop_seq = False
-                
-    #             # X-Clips can have on and off action lists, the following handles this
-    #             if type(xtrigger) is Live.Clip.Clip:
-    #                 raw_action_list = self.get_xclip_action_list(xtrigger, raw_action_list)
-    #                 if not raw_action_list:
-    #                     return
-                
-    #             # Check if the trigger is a PSEQ (accessible to any type of X-Trigger)
-    #             if raw_action_list[0] == '(' and '(PSEQ)' in raw_action_list: 
-    #                 is_play_seq = True
-    #                 raw_action_list = raw_action_list.replace('(PSEQ)', '').strip()
-                    
-    #             # Check if the trigger is a LSEQ (accessible only to X-Clips)
-    #             elif type(xtrigger) is Live.Clip.Clip and raw_action_list[0] == '(' and '(LSEQ)' in raw_action_list: 
-    #                 is_loop_seq = True
-    #                 raw_action_list = raw_action_list.replace('(LSEQ)', '').strip()
-                
-    #             # Build formatted action list    
-    #             formatted_action_list = []
-    #             for action in raw_action_list.split(';'): 
-    #                 action_data = self.format_action_name(track, action.strip())
-    #                 if action_data:
-    #                     formatted_action_list.append(action_data)
-                        
-    #             # If seq, pass to appropriate function, else call action dispatch for each action in the formatted action list
-    #             if formatted_action_list:
-    #                 if is_play_seq: 
-    #                     self.handle_play_seq_action_list(formatted_action_list, xtrigger, ident)
-    #                 elif is_loop_seq:
-    #                     self._loop_seq_clips[xtrigger.name] = [ident, formatted_action_list]
-    #                     self.handle_loop_seq_action_list(xtrigger, 0)
-    #                 else:
-    #                     for action in formatted_action_list:
-    #                         self.action_dispatch(action['track'], xtrigger, action['action'], action['args'], ident)
-    #                         if self._is_debugging:
-    #                             print(['handle_action_list_trigger triggered, ident=' + str(ident) + ' and track(s)=' + str(self.track_list_to_string(action['track'])) + ' and action=' + str(action['action']) + ' and args=' + str(action['args'])])
-                
+                  
 
     def custom_get_xclip_action_list(self, value, xclip, full_action_list):
         """ Get the action list to perform. X-Clips can have an on and off action list seperated by a comma. This will return which action list to perform 
@@ -511,24 +468,6 @@ class ActionsComponent(CompoundComponent):
         return result
 
 
-    # def get_xclip_action_list(self, xclip, full_action_list):
-    #     """ Get the action list to perform. X-Clips can have an on and off action list seperated by a comma. This will return which action list to perform 
-    #     based on whether the clip is playing. If the clip is not playing and there is no off action, this returns None. """
-    #     result = None   
-    #     split_list = full_action_list.split(',')
-    #     value = 127 # AJOUTER SI BOUTON ENFONCE
-    #     if value:
-    #         result = split_list[0]
-    #     else:
-    #         if len(split_list) == 2:
-    #             if split_list[1].strip() == '*':
-    #                 result = split_list[0]
-    #             else:
-    #                 result = split_list[1]
-    #     if self._is_debugging:
-    #         print('get_xclip_action_list returning ' + str(result))
-    #     return result
-    
                                 
     def replace_user_variables(self, string_with_vars):
         """ Replace any user variables in the given string with the value the variable represents. """

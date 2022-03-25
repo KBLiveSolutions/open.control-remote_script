@@ -46,7 +46,7 @@ from . import Options
 
 
 SCRIPT_NAME = 'open.control'
-SCRIPT_VER = 'v1.2.2'
+SCRIPT_VER = 'v1.5'
 
 MIDI_CHANNEL = 15
 MAX_REQUESTS = 10
@@ -230,7 +230,8 @@ display_actions =  {"Scene Name": 0,
                     "Looper Number": 2,
                     "Variation Number": 3,
                     "Left Marker Name": 4,
-                    "Setlist Song": 5}
+                    "Setlist Song": 5,
+                    "Custom Display": 6}
 
 class opencontrol(ControlSurface):
 
@@ -273,6 +274,7 @@ class opencontrol(ControlSurface):
 
         self.log_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
+        self.display_message("Custom Display", "Custom")
 
     def on_view_changed(self):
         for page in self.linked_page:
