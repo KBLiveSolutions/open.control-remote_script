@@ -211,9 +211,17 @@ class ActionsComponent(CompoundComponent):
                 clip_slot = t.clip_slots[s]
                 if clip_slot.has_clip:
                     self.find_action(clip_slot.clip)
-                    self.find_custom_display(clip_slot.clip)
-        self.parent.display_message("Custom Display", "Custom")
-                    
+                    self.find_custom_display(clip_slot.clip)    
+
+    def show_custom_display_clip(self):
+        if len(self.custom_display_clips) == 0:
+            self.parent.display_message("Custom Display", "Custom")
+        else:
+            self.on_custom_display_clip_playing()
+
+    def update(self):
+        self.show_custom_display_clip()        
+             
     @property
     def selected_scene(self):
         return self.session._scene_offset
@@ -263,7 +271,7 @@ class ActionsComponent(CompoundComponent):
     def on_ca_clip_playing(self):
         for clip in self.ca_clips:
             if clip.is_playing:
-                print(clip.name)
+                # print(clip.name)
                 index_1 = clip.name.find("(CA")
                 if index_1 > -1:
                     index_2 = clip.name.find(")")
@@ -280,7 +288,7 @@ class ActionsComponent(CompoundComponent):
             btn_num = args[1]
             xtrigger = self.custom_action[btn_num]
             if xtrigger:
-                print(btn_num, value, xtrigger.name)
+                # print(btn_num, value, xtrigger.name)
                 self.custom_handle_action_list_trigger(value, self.song().view.selected_track, xtrigger)
 
     def get_user_settings(self):
@@ -289,7 +297,7 @@ class ActionsComponent(CompoundComponent):
         path = os.path.dirname(os.path.abspath(__file__))
         user_file = path + '/CUSTOM_ACTIONS.txt'
         for line in open(user_file): 
-            print(line)
+            # print(line)
             if line.startswith("CUSTOM_ACTION["):
                 button_number = line[14:line.find("]")]
                 action = line[line.find("=")+1:]

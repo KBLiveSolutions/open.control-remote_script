@@ -274,7 +274,6 @@ class opencontrol(ControlSurface):
 
         self.log_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
         self.show_message('Loaded %s %s' % (SCRIPT_NAME, SCRIPT_VER))
-        self.display_message("Custom Display", "Custom")
 
     def on_view_changed(self):
         for page in self.linked_page:
@@ -511,6 +510,7 @@ class opencontrol(ControlSurface):
             self._transport.update()
             self._device.update()
             self._looper.update()
+            self._custom.update()
         """ Handle Option received"""
         if midi_bytes[0:6] == (240, 122, 29, 1, 19, 30):
             """ Option 0 = Metronome blinking"""
@@ -626,21 +626,7 @@ class opencontrol(ControlSurface):
             self._send_midi(REQUEST_MSG)
             self.schedule_message(2, self._request_identification)
             self._request_count += 1
-
-    # def _create_m4l_interface(self):
-    #     """ Creates and sets up the M4L interface for easy interaction from
-    #     M4L devices in Live 9. """
-    #     from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
-    #     self._m4l_interface = M4LInterfaceComponent(controls=self.controls,
-    #                                                 component_guard=self.component_guard,
-    #                                                 priority=1)
-    #     self._m4l_interface.name = 'M4L_Interface'
-    #     self._m4l_interface.is_private = True
-    #     self.get_control_names = self._m4l_interface.get_control_names
-    #     self.get_control = self._m4l_interface.get_control
-    #     self.grab_control = self._m4l_interface.grab_control
-    #     self.release_control = self._m4l_interface.release_control
-        
+  
     def _add_control(self, number):
         return ButtonElement(True, MIDI_CC_TYPE, MIDI_CHANNEL, number)
 
