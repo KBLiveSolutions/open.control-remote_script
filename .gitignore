@@ -49,3 +49,41 @@ Phonochose/LooperTrack.py
 Phonochose/Phonochose.py
 Phonochose/reglages.py
 .DS_Store
+Phonochose/InsertFX.py
+Phonochose/MultiFX.py
+.DS_Store
+Phonochose MULTIFX.zip
+AAAA_MIDI_Controller/__init__.py
+AAAA_MIDI_Controller/colors.py
+AAAA_MIDI_Controller/control_surface.py
+AAAA_MIDI_Controller/device.py
+AAAA_MIDI_Controller/device_parameters.py
+AAAA_MIDI_Controller/device_provider.py
+AAAA_MIDI_Controller/elements copy.py
+AAAA_MIDI_Controller/elements.py
+AAAA_MIDI_Controller/midi_controller_prototype.py
+AAAA_MIDI_Controller/mixer.py
+AAAA_MIDI_Controller/skin.py
+AAAA_MIDI_Controller/util.py
+AAAA_MIDI_Controller w device listener.zip
+AAAA_MIDI_Controller.zip
+AAAA_MIDI_Controller/channel_strip.py
+AAAA_MIDI_Controller 2/__init__.py
+AAAA_MIDI_Controller 2/channel_strip.py
+AAAA_MIDI_Controller 2/colors.py
+AAAA_MIDI_Controller 2/control_surface.py
+AAAA_MIDI_Controller 2/device.py
+AAAA_MIDI_Controller 2/device_parameters.py
+AAAA_MIDI_Controller 2/device_provider.py
+AAAA_MIDI_Controller 2/elements copy.py
+AAAA_MIDI_Controller 2/elements.py
+AAAA_MIDI_Controller 2/midi_controller_prototype.py
+AAAA_MIDI_Controller 2/mixer.py
+AAAA_MIDI_Controller 2/skin.py
+AAAA_MIDI_Controller 2/util.py
+.DS_Store
+LOOPER_MODE_Launchpad_X/Song.py.bak
+*.py
+*.bak
+*.code-workspace
+*.zip

@@ -37,3 +37,4 @@ Add your actions below this line.
 
 =================================================================================================================
 
+CUSTOM_ACTION[1] = METRO ; 1/ MUTE ON; 2/ ARM, CLIP3 DEL; PLAY 2 ; MST/ VOLUME >2 

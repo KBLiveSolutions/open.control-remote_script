@@ -390,7 +390,7 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(max(0, self._track_offset - 1), self.scene_offset())
             if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
+                self._song.view.selected_track = self._song.visible_tracks[self.track_offset()]
             self.update_track_selection()
 
     # Select Next Track
@@ -404,7 +404,7 @@ class SessionComponent(SessionBase):
         if value:
             self.set_offsets(min(self._track_offset + 1, len(self._song.visible_tracks)-1), self.scene_offset())
             if Options.session_box_linked_to_selection:
-                self._song.view.selected_track = self._song.tracks[self.track_offset()]
+                self._song.view.selected_track = self._song.visible_tracks[self.track_offset()]
             self.update_track_selection()
 
     # Selected Track Listener
@@ -469,7 +469,7 @@ class SessionComponent(SessionBase):
 
     def display_track_name(self):
         if self.is_enabled():
-            self.parent.display_message("Track Name", self.song().tracks[self._track_offset].name)
+            self.parent.display_message("Track Name", self.song().visible_tracks[self._track_offset].name)
            
     # Clip Launch/Stop
     def set_clip_launch_buttons(self, button):

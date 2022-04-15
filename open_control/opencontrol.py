@@ -18,6 +18,7 @@
 """ 1.2.2 changelog:
 - added colors to Markers for SONGS
 - fixed (SONG) detection for arrangement markers
+- fixed Grouped tracks would not show their name correctly
 
 """
 # coding: utf-8
