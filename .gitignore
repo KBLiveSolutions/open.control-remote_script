@@ -87,3 +87,4 @@ LOOPER_MODE_Launchpad_X/Song.py.bak
 *.bak
 *.code-workspace
 *.zip
+.DS_Store
