@@ -760,7 +760,7 @@ class SessionComponent(SessionBase):
 
     def launch_song(self, no_q = False):
         self.timer = Live.Base.Timer(callback=self.on_timer_reached, interval=20, repeat=False)
-        self.playing_song = self.setlist[self.selected_setlist_song][0]
+        self.playing_song = self.selected_setlist_song
         if self.playing_song in self.song().scenes:
             if no_q:
                 self.song().stop_playing()
