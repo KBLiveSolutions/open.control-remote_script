@@ -456,7 +456,8 @@ class SessionComponent(SessionBase):
     def _crossfader_value(self, value):
         if value:
             self.song().master_track.mixer_device.crossfader.value = value*2/127-1
-            self.parent.set_temp_message(str(int(value/127*100-50)))
+            value = int(value/127*100-50)
+            self.parent.set_temp_message("A" + str(max(-value+1,0)) + "|" + str(max(value,0)) + "B")
 
     @subject_slot('value')
     def on_crossfader_changed(self):
