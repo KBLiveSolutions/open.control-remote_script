@@ -201,6 +201,8 @@ slider_actions = {
     "Master Volume": 89,
     "Cue Volume": 90,
     "BPM +/- 1": 87,
+    "Crossfader": 111,
+    "Track Select": 112,
     "--- Arrangement ---": 0,
     "Skip Fwd/Bckwd": 83,
     "Loop Position": 84,
@@ -322,6 +324,7 @@ class opencontrol(ControlSurface):
                                                                     scene_bank_down_x4_button=self.buttons["Jump 4 Scenes Down"],
                                                                     track_bank_left_button=self.buttons["Sel Prev Track"],
                                                                     track_bank_right_button=self.buttons["Sel Next Track"],
+                                                                    track_select=self.buttons["Track Select"],
                                                                     find_next_empty_slot=self.buttons["Find Empty Slot"],
                                                                     jump_to_playing_scene=self.buttons["Jump to Playing Scene"],
                                                                     add_audio_track=self.buttons["Add Audio Track"],
@@ -349,7 +352,8 @@ class opencontrol(ControlSurface):
                                                                     prev_setlist_song=self.buttons[ "Prev Setlist Song"],
                                                                     next_setlist_song=self.buttons["Next Setlist Song"],
                                                                     launch_setlist_song=self.buttons["Launch Setlist Song"],
-                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"]
+                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
+                                                                    crossfader=self.buttons["Crossfader"]
                                                                     ))
 
         """Transport Actions"""

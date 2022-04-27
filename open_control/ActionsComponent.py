@@ -21,7 +21,7 @@ class UserAction:
             self.name = action_name
         else:
             self.name = "[] " + action_name
-        super(UserAction, self).__init__(*a, **k)
+        # super(UserAction, self).__init__(*a, **k)
 
     def update_custom_action(self, action_name):
         if action_name.startswith("["):
