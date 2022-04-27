@@ -842,7 +842,5 @@ class SessionComponent(SessionBase):
 
     def show_song_name(self):
         name = self.selected_setlist_song.name
-        # index = self.find_song_in_name(name)
-        # sub_index = self.setlist[index].index(self.selected_setlist_song)
         index, sub_index = self.selected_setlist_song_indexes()
         self.parent.display_message("Setlist Song", str(index) + "." + str(sub_index+1) + self.remove_string_from_name("SONG", (self.remove_string_from_name("COLOR", name))))
