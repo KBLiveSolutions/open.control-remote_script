@@ -412,12 +412,18 @@ class TransportComponent(TransportBase):
                 if cue_point.time > highest_cue:
                     highest_cue = cue_point.time
                     self.selected_cue = cue_point
-        if self.selected_cue is not None and self.prev_cue is not self.selected_cue:
+        if self.selected_cue is not None and self.prev_cue != self.selected_cue:
             self.parent.display_message("Left Marker Name", self.selected_cue.name)
             if self.prev_cue:
                 self.prev_cue.remove_name_listener(self._on_prev_cue_name_changed)
             self.prev_cue = self.selected_cue
             self.prev_cue.add_name_listener(self._on_prev_cue_name_changed)
+            setlist_number = self._session.find_song_in_name(self.selected_cue.name)
+            if setlist_number > -1:
+                for setlist_song in self._session.setlist[setlist_number]:
+                    if setlist_song == self.selected_cue:
+                        self._session.selected_setlist_song = setlist_song
+                        self._session.show_song_name()
 
     # Next/Prev Marker
     def set_prev_next_cue_button(self, button):
@@ -478,7 +484,6 @@ class TransportComponent(TransportBase):
         self._session.scan_setlist()
 
     def _on_cue_name_changed(self):
-        print("name chgd")
         self._session.scan_setlist()
 
     def check_stop(self, name):
