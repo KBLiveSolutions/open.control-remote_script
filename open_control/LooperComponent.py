@@ -100,7 +100,7 @@ class LooperComponent(DeviceBase):
         self.clear_looper_leds()
         for i in range(len(self.looper_list)):
             i = i+1
-            if i < 5 and self.looper_list[i] is not None and self._6_looper_buttons is not None:
+            if i < 7 and self.looper_list[i] is not None and self._6_looper_buttons is not None:
                 looper_state = self.looper_list[i].parameters[1].value
                 self._6_looper_buttons[i-1].send_value(state_color[looper_state], force=True)
             if i is self._active_looper_number and self.looper_state_button:
