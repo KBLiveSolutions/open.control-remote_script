@@ -16,6 +16,7 @@ class SessionComponent(SessionBase):
         self.selected_setlist_song = None
         self.playing_song = None
         self._track_leds = [None, None, None]
+        self.view = "Detail/DeviceChain"
         super(SessionComponent, self).__init__(*a, **k)
 
     def update(self):
@@ -34,8 +35,8 @@ class SessionComponent(SessionBase):
         self._detail_view_toggle_button = button
         self._detail_view_toggle_button_value.subject = button
 
-    def on_view_changed(self):
-        self.view = "Detail/Clip"
+    # def on_view_changed(self):
+    #     self.view = "Detail/Clip"
 
     @subject_slot('value')
     def _detail_view_toggle_button_value(self, value):
