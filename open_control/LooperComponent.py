@@ -13,6 +13,7 @@ class LooperComponent(DeviceBase):
         self._color_buttons = [None, None]
         self._active_looper_number = 0
         self._6_looper_buttons = None
+        self.arm_looper_track_button = None
         super(LooperComponent, self).__init__(*a, **k)
         self.song().add_tracks_listener(self.build_loopers_list)
         self.song().view.add_selected_track_listener(self.on_selected_track_changed)
@@ -285,7 +286,7 @@ class LooperComponent(DeviceBase):
         color = 0
         if self._parent_track.arm == 1:
             color = 127
-        if self.arm_looper_track_button:
+        if self.arm_looper_track_button is not None:
             self.arm_looper_track_button.send_value(color, force=True)
 
     # Mute Parent Track
