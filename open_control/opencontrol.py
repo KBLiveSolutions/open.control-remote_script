@@ -350,8 +350,8 @@ class opencontrol(ControlSurface):
                                                                     ))
 
         """Transport Actions"""
-        self._transport_mode = AddLayerMode(self._transport, Layer(continue_playing=self.buttons["Continue Playing"],
-                                                                    start_stop=self.buttons["Start/Stop"],
+        self._transport_mode = AddLayerMode(self._transport, Layer(start_stop=self.buttons["Start/Stop"],
+                                                                    continue_playing=self.buttons["Continue Playing"],
                                                                     loop_button=self.buttons["Arrangement Loop"],
                                                                     capture=self.buttons["Capture"],
                                                                     loop_position=self.buttons["Loop Position"],
@@ -386,16 +386,17 @@ class opencontrol(ControlSurface):
                                                             send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
         """Devices Actions"""
-        self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
-                                                                    prev_variation_button=self.buttons["Prev Variation"],
-                                                                    next_variation_button=self.buttons["Next Variation"],
-                                                                    next_device_button=self.buttons["Next Device"],
-                                                                    prev_device_button=self.buttons["Prev Device"],
-                                                                    store_variation_button=self.buttons["Store Variation"],
-                                                                    recall_variation_button=self.buttons["Recall Last Used"],
-                                                                    randomize_macros_button=self.buttons["Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
-                                                                    priority=1))
+        if Live.Application.get_application().get_major_version() > 10:
+            self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
+                                                                        prev_variation_button=self.buttons["Prev Variation"],
+                                                                        next_variation_button=self.buttons["Next Variation"],
+                                                                        next_device_button=self.buttons["Next Device"],
+                                                                        prev_device_button=self.buttons["Prev Device"],
+                                                                        store_variation_button=self.buttons["Store Variation"],
+                                                                        recall_variation_button=self.buttons["Recall Last Used"],
+                                                                        randomize_macros_button=self.buttons["Randomize Macros"],
+                                                                        selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
+                                                                        priority=1))
 
         """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(add_looper = self.buttons["+ Add Looper"],
