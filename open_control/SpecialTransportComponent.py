@@ -8,6 +8,7 @@ class TransportComponent(TransportBase):
         self.parent = parent
         # self.left_cue = None
         self.current_cue = None
+        self._continue_playing_button = None
         super(TransportComponent, self).__init__(*a, **k)
 
     def set_session(self, session):

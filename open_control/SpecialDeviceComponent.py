@@ -4,13 +4,16 @@ from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks
 from . import Colors, Options
 import Live
 
+
 class DeviceComponent(DeviceComponentBase):
 
     def __init__(self, parent, *a, **k):
         self.parent = parent
         super(DeviceComponent, self).__init__(*a, **k)
         self.selected_device_listener()
-
+        self.has_variations = True if Live.Application.get_application().get_major_version() > 10 else False
+        # print(["variations",   self.has_variations])
+        # print("=============================================")
     def set_mixer(self, mixer):
         self._mixer = mixer
 
@@ -31,7 +34,7 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_launch_variation(self, value):
-        if value or not self._launch_variation_button.is_momentary():
+        if value or not self._launch_variation_button.is_momentary() and self.has_variations:
             self._device.recall_selected_variation()
 
     def set_store_variation_button(self, button):
@@ -40,7 +43,7 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_store_variation(self, value):
-        if value or not self._store_variation_button.is_momentary():
+        if value or not self._store_variation_button.is_momentary() and self.has_variations:
             self._device.store_variation()
 
     def set_recall_variation_button(self, button):
@@ -49,7 +52,7 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_recall_variation(self, value):
-        if value or not self._recall_variation_button.is_momentary():
+        if value or not self._recall_variation_button.is_momentary() and self.has_variations:
             self._device.recall_last_used_variation()
 
     def set_randomize_macros_button(self, button):
@@ -58,7 +61,7 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_randomize_macros(self, value):
-        if value or not self._randomize_macros_button.is_momentary():
+        if value or not self._randomize_macros_button.is_momentary() and self.has_variations:
             self._device.randomize_macros()
 
     def set_prev_device_button(self, button):
@@ -87,7 +90,7 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_jump_to_prev_variation(self, value):
-        if value or not self._prev_variation_button.is_momentary():
+        if value or not self._prev_variation_button.is_momentary() and self.has_variations:
             if self._device.selected_variation_index > 0:
                 self._device.selected_variation_index -= 1
                 self._update_name()
@@ -98,14 +101,14 @@ class DeviceComponent(DeviceComponentBase):
 
     @subject_slot(u'value')
     def _on_jump_to_next_variation(self, value):
-        if value or not self._next_variation_button.is_momentary():
+        if value or not self._next_variation_button.is_momentary() and self.has_variations:
             if self._device.selected_variation_index < self._device.variation_count-1:
                 self._device.selected_variation_index += 1
                 self._update_name()
 
     def _update_name(self):
         appointed_device = self.song().appointed_device
-        if appointed_device is not None:
+        if appointed_device is not None and self.has_variations:
             name = appointed_device.name
             if self._device and self._device.can_have_chains:
                 name = "V" + str(self._device.selected_variation_index+1) +":"+ name
