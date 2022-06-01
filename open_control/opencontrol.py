@@ -416,7 +416,10 @@ class opencontrol(ControlSurface):
         self.pages = 'page_0'
         self.current_page = 0
 
-        active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode]
+        if Live.Application.get_application().get_major_version() > 10:
+            active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._device_layer_mode, self._looper_layer_mode]
+        else:
+            active_layers = [self._session_layer_mode, self._mixer_mode, self._transport_mode, self._looper_layer_mode]
         self._pages.add_mode(self.pages, active_layers)
         self.set_page_0_1_button(self.buttons["Page 1/2"])
         self.set_page_0_2_button(self.buttons["Page 1/3"])
