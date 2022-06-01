@@ -393,16 +393,18 @@ class opencontrol(ControlSurface):
                                                             send_controls=ButtonMatrixElement(rows=[[self.buttons["Send A"], self.buttons["Send B"]]])
                                                             ))
         """Devices Actions"""
-        self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
-                                                                    prev_variation_button=self.buttons["Prev Variation"],
-                                                                    next_variation_button=self.buttons["Next Variation"],
-                                                                    next_device_button=self.buttons["Next Device"],
-                                                                    prev_device_button=self.buttons["Prev Device"],
-                                                                    store_variation_button=self.buttons["Store Variation"],
-                                                                    recall_variation_button=self.buttons["Recall Last Used"],
-                                                                    randomize_macros_button=self.buttons["Randomize Macros"],
-                                                                    selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
-                                                                    priority=1))
+
+        if Live.Application.get_application().get_major_version() > 10:
+            self._device_layer_mode = AddLayerMode(self._device, Layer(launch_variation_button=self.buttons["Launch Variation"],
+                                                                        prev_variation_button=self.buttons["Prev Variation"],
+                                                                        next_variation_button=self.buttons["Next Variation"],
+                                                                        next_device_button=self.buttons["Next Device"],
+                                                                        prev_device_button=self.buttons["Prev Device"],
+                                                                        store_variation_button=self.buttons["Store Variation"],
+                                                                        recall_variation_button=self.buttons["Recall Last Used"],
+                                                                        randomize_macros_button=self.buttons["Randomize Macros"],
+                                                                        selected_device_parameters=ButtonMatrixElement(rows=[[self.buttons["Parameter 1"], self.buttons["Parameter 2"], self.buttons["Parameter 3"], self.buttons["Parameter 4"]]]),
+                                                                        priority=1))
 
         """Looper Actions"""
         self._looper_layer_mode = AddLayerMode(self._looper, Layer(add_looper = self.buttons["+ Add Looper"],
