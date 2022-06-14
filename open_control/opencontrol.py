@@ -203,6 +203,8 @@ slider_actions = {
     "Master Volume": 89,
     "Cue Volume": 90,
     "BPM +/- 1": 87,
+    "Crossfader": 111,
+    "Track Select": 112,
     "--- Arrangement ---": 0,
     "Skip Fwd/Bckwd": 83,
     "Loop Position": 84,
