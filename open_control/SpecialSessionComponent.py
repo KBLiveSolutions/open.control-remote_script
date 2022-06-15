@@ -429,7 +429,25 @@ class SessionComponent(SessionBase):
             self._on_arm_changed()
         except:
             pass
+        
+    def set_crossfader(self, button):
+        self._crossfader_button = button
+        self._crossfader_value.subject = button
+        # self.on_crossfader_changed.subject = self.song().master_track.mixer_device.crossfader
 
+    @subject_slot('value')
+    def _crossfader_value(self, value):
+        if value:
+            self.song().master_track.mixer_device.crossfader.value = value*2/127-1
+            value = int(value/127*100-50)
+            self.parent.set_temp_message("A" + str(max(-value+1,0)) + "|" + str(max(value,0)) + "B")
+
+    @subject_slot('value')
+    def on_crossfader_changed(self):
+        value = self.song().master_track.mixer_device.crossfader.value
+        if self._crossfader_button:
+            self._crossfader_button.send_value(value , force=True)
+      
     # def _update_track_position(self):
     #         self._on_track_color_changed()
     #         self.display_track_name()
