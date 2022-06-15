@@ -348,7 +348,8 @@ class opencontrol(ControlSurface):
                                                                     prev_setlist_song=self.buttons[ "Prev Setlist Song"],
                                                                     next_setlist_song=self.buttons["Next Setlist Song"],
                                                                     launch_setlist_song=self.buttons["Launch Setlist Song"],
-                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"]
+                                                                    launch_setlist_song_noq=self.buttons["Launch Setlist Song NoQ"],
+                                                                    crossfader=self.buttons["Crossfader"]
                                                                     ))
 
         """Transport Actions"""
