@@ -486,7 +486,9 @@ class opencontrol(ControlSurface):
             self.enable_page()
     
     def enable_page(self):
+        color = [20, 25, 16]
         self.show_message('Page %s' % str(self.current_page+1))
+        self._send_midi((191, 113, color[self.current_page]))
         self._send_midi((240, 122, 29, 247))
         self._send_midi((240, 122, 29, 1, 19, 40, self.current_page, 247))
         self.update_pages()
